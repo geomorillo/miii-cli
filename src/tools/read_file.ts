@@ -17,7 +17,11 @@ export const read_file: Tool<Input> = {
   },
   handler: ({ path }) => {
     try {
-      return { content: readFileSync(path, 'utf-8') }
+      const MAX = 200_000
+      const raw = readFileSync(path, 'utf-8')
+      const truncated = raw.length > MAX
+      const body = truncated ? raw.slice(0, MAX) + `\n[truncated: ${raw.length - MAX} more chars]` : raw
+      return { content: body }
     } catch (err) {
       return { content: err instanceof Error ? err.message : String(err), is_error: true }
     }

@@ -46,7 +46,7 @@ function FileEditBlock({
   removed: number
   previewLines: Array<{ sign: '+' | '-' | ' '; text: string }>
 }) {
-  const MAX = 8
+  const MAX = 16
   const shown = previewLines.slice(0, MAX)
   const extra = previewLines.length - shown.length
   return (
@@ -114,23 +114,40 @@ function toolHeader(use: ToolUseDisplay): { label: string; arg: string } {
   return { label, arg }
 }
 
-function summarizeResult(res: ToolResultDisplay): string {
-  const lines = res.content.split('\n')
-  const first = lines[0] ?? ''
+function summarizeResult(res: ToolResultDisplay, toolName?: string): string {
+  const content = res.content ?? ''
+  const lines = content.split('\n')
+  if (!res.is_error) {
+    if (toolName === 'read_file') {
+      const total = lines.length
+      return `Read ${total} line${total === 1 ? '' : 's'}`
+    }
+    if (toolName === 'grep') {
+      if (content === 'No matches.') return 'No matches'
+      const n = lines.filter(Boolean).length
+      return `${n} match${n === 1 ? '' : 'es'}`
+    }
+    if (toolName === 'glob') {
+      if (content === 'No files matched.') return 'No files'
+      const n = lines.filter(Boolean).length
+      return `${n} file${n === 1 ? '' : 's'}`
+    }
+  }
+  const firstNonEmpty = lines.find((l) => l.trim().length > 0) ?? ''
   const extra = lines.length - 1
-  const head = first.length > 100 ? first.slice(0, 97) + '...' : first
+  const head = firstNonEmpty.length > 100 ? firstNonEmpty.slice(0, 97) + '...' : firstNonEmpty
   return extra > 0 ? `${head} (+${extra} lines)` : head
 }
 
 function ToolUseLine({ use, result }: { use: ToolUseDisplay; result?: ToolResultDisplay }) {
-  if (use.name === 'write_file') {
+  if (use.name === 'write_file' && !result?.is_error) {
     const input = use.input as { path?: string; content?: string }
     const content = input.content ?? ''
     const added = countLines(content)
     const preview = content.split('\n').map((t) => ({ sign: '+' as const, text: t }))
     return <FileEditBlock label="Write" path={input.path ?? ''} added={added} removed={0} previewLines={preview} />
   }
-  if (use.name === 'edit_file') {
+  if (use.name === 'edit_file' && !result?.is_error) {
     const input = use.input as { path?: string; old_str?: string; new_str?: string }
     const oldS = input.old_str ?? ''
     const newS = input.new_str ?? ''
@@ -155,7 +172,7 @@ function ToolUseLine({ use, result }: { use: ToolUseDisplay; result?: ToolResult
       {result && (
         <Box marginLeft={2}>
           <Text color={result.is_error ? 'red' : undefined} dimColor={!result.is_error}>
-            {'⎿  '}{summarizeResult(result)}
+            {'⎿  '}{summarizeResult(result, use.name)}
           </Text>
         </Box>
       )}
