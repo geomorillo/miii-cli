@@ -1,10 +1,10 @@
 {
   "name": "miii-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Terminal AI coding agent powered by Ollama",
   "type": "module",
   "bin": {
-    "miii": "./dist/cli.js"
+    "miii": "dist/cli.js"
   },
   "files": [
     "dist",
@@ -17,7 +17,8 @@
     "start": "tsx src/cli.tsx",
     "dev": "tsx watch src/cli.tsx",
     "build": "tsup",
-    "prepublishOnly": "npm run build"
+    "postbuild": "chmod +x dist/cli.js",
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
