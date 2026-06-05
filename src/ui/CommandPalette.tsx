@@ -7,6 +7,7 @@ export interface Command {
 
 export const COMMANDS: Command[] = [
   { name: '/models', description: 'switch model or adjust effort' },
+  { name: '/clear',  description: 'clear chat and reset context' },
   { name: '/exit',   description: 'quit miii' },
 ]
 
@@ -40,7 +41,7 @@ export function CommandPalette({ filter, cursor }: Props) {
         )
       })}
       <Box marginTop={0}>
-        <Text dimColor>↑↓ navigate   tab autocomplete   esc dismiss</Text>
+        <Text dimColor>↑↓ navigate   tab/enter autocomplete   esc dismiss</Text>
       </Box>
     </Box>
   )

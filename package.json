@@ -1,16 +1,37 @@
 {
   "name": "miii-cli",
   "version": "0.1.0",
+  "description": "Terminal AI coding agent powered by Ollama",
   "type": "module",
   "bin": {
-    "miii": "./src/cli.tsx"
+    "miii": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
   },
   "scripts": {
     "start": "tsx src/cli.tsx",
     "dev": "tsx watch src/cli.tsx",
-    "build": "tsc",
-    "build:watch": "tsc --watch"
+    "build": "tsup",
+    "prepublishOnly": "npm run build"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maruakshay/miii-cli.git"
+  },
+  "keywords": [
+    "cli",
+    "ai",
+    "ollama",
+    "agent",
+    "ink",
+    "tui"
+  ],
+  "license": "MIT",
   "dependencies": {
     "execa": "^9.0.0",
     "ink": "^5.0.0",
@@ -22,6 +43,7 @@
     "@types/marked-terminal": "^6.1.1",
     "@types/node": "^22.0.0",
     "@types/react": "^18.3.0",
+    "tsup": "^8.5.1",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }

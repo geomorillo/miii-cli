@@ -27,6 +27,7 @@ export interface OllamaTool {
 
 export interface ChatChunk {
   content: string
+  thinking?: string
   done: boolean
   tool_calls?: OllamaToolCall[]
   prompt_eval_count?: number

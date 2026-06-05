@@ -1,10 +1,22 @@
+import { useEffect, useState } from 'react'
 import { Box, Text } from 'ink'
 
 interface Props {
   input: string
+  disabled?: boolean
+  processingLabel?: string
 }
 
-export function InputBar({ input }: Props) {
+const SPIN = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+
+export function InputBar({ input, disabled, processingLabel }: Props) {
+  const [frame, setFrame] = useState(0)
+  useEffect(() => {
+    if (!disabled) return
+    const t = setInterval(() => setFrame((f) => (f + 1) % SPIN.length), 80)
+    return () => clearInterval(t)
+  }, [disabled])
+
   return (
     <Box
       borderStyle="single"
@@ -12,13 +24,23 @@ export function InputBar({ input }: Props) {
       borderBottom={true}
       borderLeft={false}
       borderRight={false}
-      borderColor="white dim"
+      borderColor={disabled ? 'yellow' : 'white dim'}
       paddingX={1}
       marginBottom={1}
     >
-      <Text dimColor>{'> '}</Text>
-      <Text>{input}</Text>
-      <Text dimColor>▌</Text>
+      {disabled ? (
+        <>
+          <Text color="yellow">{SPIN[frame] + ' '}</Text>
+          <Text dimColor italic>{processingLabel ?? 'processing…'}</Text>
+          <Text dimColor>  (esc to cancel)</Text>
+        </>
+      ) : (
+        <>
+          <Text dimColor>{'> '}</Text>
+          <Text>{input}</Text>
+          <Text dimColor>▌</Text>
+        </>
+      )}
     </Box>
   )
 }

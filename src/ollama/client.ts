@@ -7,6 +7,16 @@ const ollama = new Ollama({
 
 const OLLAMA_NOT_RUNNING = 'Ollama is not running. Start it with: ollama serve'
 
+const HARMONY_RE = /<\|?\/?(?:channel|message|start|end|return|constrain|assistant|user|system|developer|tool|tool_call|tool_response|final|analysis|commentary)\|?>/gi
+const CHANNEL_LABEL_RE = /^(?:analysis|commentary|final)\s*(?=\w)/i
+
+function stripHarmony<T extends string | undefined>(s: T): T {
+  if (s == null) return s
+  let out = (s as string).replace(HARMONY_RE, '')
+  out = out.replace(CHANNEL_LABEL_RE, '')
+  return out as T
+}
+
 function isConnectionError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err)
   return msg.includes('ECONNREFUSED') || msg.includes('fetch failed') || msg.includes('connect')
@@ -48,20 +58,55 @@ export async function modelContext(model: string): Promise<number> {
   }
 }
 
+export interface ChatOptions {
+  temperature?: number
+  num_predict?: number
+  num_ctx?: number
+  keep_alive?: string
+  signal?: AbortSignal
+}
+
 export async function* chat(
   model: string,
   messages: OllamaMessage[],
   tools?: OllamaTool[],
+  opts?: ChatOptions,
 ): AsyncGenerator<ChatChunk> {
+  if (opts?.signal?.aborted) return
+  // Per-call client with a fetch that wires our AbortSignal into the underlying
+  // request. ollama.abort() only cancels streams already registered in its
+  // ongoingStreamedRequests list, which happens *after* the initial POST
+  // resolves — so it can't cancel the long pre-first-chunk wait while the
+  // model loads or thinks. Injecting the signal at fetch time fixes that.
+  const signal = opts?.signal
+  const client = signal
+    ? new Ollama({
+        host: process.env.OLLAMA_HOST ?? 'http://localhost:11434',
+        fetch: ((input: RequestInfo | URL, init?: RequestInit) =>
+          fetch(input, { ...init, signal })) as typeof fetch,
+      })
+    : ollama
   let stream: AsyncIterable<ChatResponse>
+  const onAbort = () => { try { client.abort() } catch {} }
+  if (signal) signal.addEventListener('abort', onAbort, { once: true })
   try {
-    stream = await ollama.chat({
+    const numPredict = opts?.num_predict
+    const options: Record<string, number> = {
+      temperature: opts?.temperature ?? 0.2,
+      num_ctx: opts?.num_ctx ?? 8192,
+    }
+    if (numPredict !== undefined && numPredict > 0) options.num_predict = numPredict
+    stream = await client.chat({
       model,
       messages: messages as Message[],
       tools: tools as Tool[] | undefined,
       stream: true,
-    })
+      think: true,
+      keep_alive: opts?.keep_alive ?? '10m',
+      options,
+    } as unknown as Parameters<typeof ollama.chat>[0]) as unknown as AsyncIterable<ChatResponse>
   } catch (err) {
+    if (signal?.aborted) return
     if (isConnectionError(err)) {
       throw new Error(OLLAMA_NOT_RUNNING)
     }
@@ -73,18 +118,24 @@ export async function* chat(
   }
   try {
     for await (const chunk of stream) {
+      if (signal?.aborted) break
       yield {
-        content: chunk.message.content,
+        content: stripHarmony(chunk.message.content),
+        thinking: stripHarmony((chunk.message as { thinking?: string }).thinking),
         done: chunk.done,
         tool_calls: chunk.message.tool_calls as ChatChunk['tool_calls'],
         prompt_eval_count: chunk.prompt_eval_count,
         eval_count: chunk.eval_count,
       }
+      if (opts?.signal?.aborted) break
     }
   } catch (err) {
+    if (opts?.signal?.aborted) return
     if (isConnectionError(err)) {
       throw new Error(OLLAMA_NOT_RUNNING)
     }
     throw err
+  } finally {
+    if (opts?.signal) opts.signal.removeEventListener('abort', onAbort)
   }
 }
