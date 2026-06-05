@@ -32,3 +32,4 @@ export const edit_file: Tool<Input> = {
     return { content: `Edited ${path}` }
   },
 }
+
