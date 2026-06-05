@@ -1,77 +1,69 @@
 # miii
 
-**Fastest coding agent in your terminal.** A local-first, zero-config CLI coding companion that pairs a tight Ink TUI with your own Ollama models — chat, edit files, and run commands without API keys, cloud round-trips, or latency tax.
+The local-first AI coding agent for engineers who hate latency.
 
-Built because every other CLI agent felt slow.
+miii transforms your terminal into a high-performance development environment by pairing a tight Ink TUI with Ollama. It is a zero-config, private companion that can read your code, write your features, and run your tests—all without a single byte leaving your machine.
 
-```
-$ miii
-● qwen2.5-coder  ·  ready
-> fix the flaky test in auth.spec.ts
-```
+## The Philosophy
 
-## Why
+Most AI agents are wrappers around cloud APIs. They are slow, expensive, and a privacy nightmare. miii is different:
 
-Cloud agents = network round-trips, rate limits, $$$, your code leaving your machine.
-miii = local Ollama model + tight Ink TUI + zero ceremony. It just rips.
+1. Local-First: Powered by Ollama. Your code stays on your disk.
+2. Zero Ceremony: No API keys. No billing. Just run miii and start coding.
+3. Engineering Mindset: miii doesn't just "chat". It treats every request as a bug, feature, or fix. It decomposes problems, executes tools, and verifies results.
 
-## Prerequisites
+## Project Status
 
-- **Node.js** 18+ and npm
-- **[Ollama](https://ollama.com)** installed and running locally (`ollama serve`)
-- A pulled coder model, e.g.:
+This project is currently an MVP designed to demonstrate and refine basic AI coding skills. I am refurbishing older implementations and experimenting with the agent loop. Feel free to fork, modify, or do whatever you want with this codebase.
 
-  ```bash
-  ollama pull qwen2.5-coder:14b
-  ```
 
-## Installation
+## Capabilities
 
-Install globally from npm:
+miii is equipped with a suite of tools to interact with your workspace:
 
-```bash
+- File System: read_file, write_file, edit_file (precise string replacement).
+- Discovery: glob (pattern matching), grep (regex search).
+- Execution: run_bash (shell command execution).
+
+Every sensitive operation is gated by a permission system. You decide what the agent can touch.
+
+## Quick Start
+
+### 1. Prerequisites
+- Node.js 18+
+- Ollama (running locally via ollama serve)
+- A coder model (e.g., ollama pull qwen2.5-coder:14b)
+
+### 2. Install
 npm i -g miii-cli
-```
 
-Verify:
-
-```bash
-miii --version
-```
-
-## Use
-
-Launch TUI in current directory — auto-detects your Ollama models and drops you into a chat session scoped to the working dir:
-
-```bash
+### 3. Launch
 miii
-```
 
-Inside the TUI:
+## TUI Cheat Sheet
 
-- **type** → send a message to the agent
-- **`@file`** → mention a file; contents get inlined into context
-- **`/clear`** → wipe conversation history, keep model + cwd
-- **`/models`** → open picker to switch between installed Ollama models
-- **`esc`** → abort the in-flight response or tool call
-- **`ctrl+c`** → quit miii
+- Type & Enter: Send a prompt to the agent.
+- @file: Inline a file's content into the context.
+- /models: Switch your active Ollama model.
+- /clear: Reset conversation history.
+- Esc: Stop the current generation or tool execution.
+- Ctrl+C: Quit.
 
-The header shows live context usage. When the active context exceeds **70%** of the model's window, miii flags it inline so you can `/clear` or compact before the model starts dropping earlier turns.
+## Configuration
 
-## Tools the agent gets
+Global settings are stored in ~/.miii/config.json:
+- model: Your default LLM.
+- ollamaHost: Your Ollama API endpoint.
+- effort: Tuning for temperature and limits (low | medium | high).
 
-`read_file` · `write_file` · `edit_file` · `run_bash` · `glob` · `grep` · `run_bash`
+Project-specific permissions are managed in .miii/settings.local.json.
 
-Sensitive ops ask permission. Deny one, agent tries another or stops clean.
+## Development
 
-## Dev
-
-```bash
-git clone <repo> && cd miii-cli
-npm i
+git clone https://github.com/maruakshay/miii-cli.git
+cd miii-cli
+npm install
 npm run dev
-```
 
----
-
-Made because waiting on tokens is the worst part of coding with AI.
+## License
+MIT
