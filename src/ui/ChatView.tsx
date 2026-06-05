@@ -52,11 +52,11 @@ function FileEditBlock({
   return (
     <Box flexDirection="column" marginLeft={2}>
       <Box>
-        <Text color="yellow">{'● '}</Text>
-        <Text color="yellow">{label}</Text>
-        <Text>{'('}</Text>
+        <Text color="yellow">● </Text>
+        <Text color="yellow">{label} </Text>
+        <Text>(</Text>
         <Text bold>{path}</Text>
-        <Text>{')'}</Text>
+        <Text>)</Text>
       </Box>
       <Box marginLeft={2}>
         <Text dimColor>
@@ -89,6 +89,11 @@ const TOOL_LABEL: Record<string, string> = {
   grep: 'Grep',
 }
 
+function truncate(s: string, max: number): string {
+  if (s.length <= max) return s
+  return s.slice(0, max - 1) + '…'
+}
+
 function toolHeader(use: ToolUseDisplay): { label: string; arg: string } {
   const label = TOOL_LABEL[use.name] ?? use.name
   const input = (use.input ?? {}) as Record<string, unknown>
@@ -99,16 +104,17 @@ function toolHeader(use: ToolUseDisplay): { label: string; arg: string } {
     case 'read_file':
       arg = String(input.path ?? input.file_path ?? '')
       break
-    case 'run_bash':
-      arg = String(input.command ?? '')
+    case 'run_bash': {
+      const cmd = String(input.command ?? '').replace(/\s+/g, ' ')
+      arg = truncate(cmd, 120)
       break
+    }
     case 'glob':
     case 'grep':
-      arg = String(input.pattern ?? '')
+      arg = truncate(String(input.pattern ?? ''), 120)
       break
     default: {
-      const j = JSON.stringify(input)
-      arg = j.length > 80 ? j.slice(0, 77) + '...' : j
+      arg = truncate(JSON.stringify(input), 80)
     }
   }
   return { label, arg }
@@ -139,6 +145,44 @@ function summarizeResult(res: ToolResultDisplay, toolName?: string): string {
   return extra > 0 ? `${head} (+${extra} lines)` : head
 }
 
+function ToolResultBlock({ result, toolName }: { result: ToolResultDisplay; toolName: string }) {
+  const content = result.content ?? ''
+  const lines = content.split('\n')
+  const showMulti =
+    (toolName === 'run_bash' || toolName === 'grep' || toolName === 'glob' || result.is_error) &&
+    lines.length > 1
+  if (!showMulti) {
+    return (
+      <Box marginLeft={2}>
+        <Text color={result.is_error ? 'red' : undefined} dimColor={!result.is_error}>
+          {'⎿  '}{summarizeResult(result, toolName)}
+        </Text>
+      </Box>
+    )
+  }
+  const MAX_LINES = 10
+  const MAX_LINE_WIDTH = 200
+  const shown = lines.slice(0, MAX_LINES).map((l) => truncate(l, MAX_LINE_WIDTH))
+  const extra = lines.length - shown.length
+  return (
+    <Box flexDirection="column" marginLeft={2}>
+      <Text color={result.is_error ? 'red' : undefined} dimColor={!result.is_error}>
+        {'⎿  '}{summarizeResult(result, toolName)}
+      </Text>
+      {shown.map((ln, i) => (
+        <Box key={i} marginLeft={4}>
+          <Text color={result.is_error ? 'red' : undefined} dimColor>{ln || ' '}</Text>
+        </Box>
+      ))}
+      {extra > 0 && (
+        <Box marginLeft={4}>
+          <Text dimColor>… {extra} more lines</Text>
+        </Box>
+      )}
+    </Box>
+  )
+}
+
 function ToolUseLine({ use, result }: { use: ToolUseDisplay; result?: ToolResultDisplay }) {
   if (use.name === 'write_file' && !result?.is_error) {
     const input = use.input as { path?: string; content?: string }
@@ -163,19 +207,13 @@ function ToolUseLine({ use, result }: { use: ToolUseDisplay; result?: ToolResult
   return (
     <Box flexDirection="column" marginLeft={2}>
       <Box>
-        <Text color="yellow">{'● '}</Text>
-        <Text color="yellow">{label}</Text>
-        <Text>{'('}</Text>
+        <Text color="yellow">● </Text>
+        <Text color="yellow">{label} </Text>
+        <Text>(</Text>
         <Text bold>{arg}</Text>
-        <Text>{')'}</Text>
+        <Text>)</Text>
       </Box>
-      {result && (
-        <Box marginLeft={2}>
-          <Text color={result.is_error ? 'red' : undefined} dimColor={!result.is_error}>
-            {'⎿  '}{summarizeResult(result, use.name)}
-          </Text>
-        </Box>
-      )}
+      {result && <ToolResultBlock result={result} toolName={use.name} />}
     </Box>
   )
 }
