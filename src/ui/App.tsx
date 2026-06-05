@@ -96,6 +96,24 @@ export function App() {
     let thinkingAcc = ''
     let firstToken = true
     setThinkingContent('')
+
+    let streamFlushAt = 0
+    let thinkFlushAt = 0
+    const FLUSH_MS = 50
+    const flushStream = (force = false) => {
+      const now = Date.now()
+      if (force || now - streamFlushAt >= FLUSH_MS) {
+        streamFlushAt = now
+        setStreamingContent(accumulated)
+      }
+    }
+    const flushThink = (force = false) => {
+      const now = Date.now()
+      if (force || now - thinkFlushAt >= FLUSH_MS) {
+        thinkFlushAt = now
+        setThinkingContent(thinkingAcc)
+      }
+    }
     let turnUses: ToolUseDisplay[] = []
     let turnResults: ToolResultDisplay[] = []
     const startTime = Date.now()
@@ -150,14 +168,14 @@ export function App() {
             setThinking(false)
             setProcessingLabel('responding…')
             accumulated += ev.text
-            setStreamingContent(accumulated)
+            flushStream()
             break
           }
           case 'thinking-delta': {
             thinkingAcc += ev.text
-            setThinkingContent(thinkingAcc)
             setThinking(true)
             setProcessingLabel('thinking…')
+            flushThink()
             break
           }
           case 'tool-use': {
@@ -177,6 +195,8 @@ export function App() {
             break
           }
           case 'turn-end': {
+            flushStream(true)
+            flushThink(true)
             setStreaming(false)
             if (ev.stop_reason === 'tool_use') {
               flushTurn(null)

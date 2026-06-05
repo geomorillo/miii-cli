@@ -5,7 +5,7 @@ import { check, type PermissionContext } from '../permissions/policy.js'
 import { HookBus } from '../hooks/bus.js'
 import { toOllamaMessages, blocksFromOllama } from './adapter.js'
 import type {
-  AnthropicMessage,
+  MiiMessage,
   AgentEvent,
   ToolUse,
   ToolResultBlock,
@@ -20,7 +20,7 @@ const REPEAT_KILL = 4
 export interface RunAgentOpts {
   model: string
   cwd: string
-  history: AnthropicMessage[]
+  history: MiiMessage[]
   userText: string
   permissions: PermissionContext
   hooks?: HookBus
@@ -39,13 +39,13 @@ export interface RunAgentOpts {
  *
  * Returns the updated history (caller persists).
  */
-export async function* runAgent(opts: RunAgentOpts): AsyncGenerator<AgentEvent, AnthropicMessage[]> {
+export async function* runAgent(opts: RunAgentOpts): AsyncGenerator<AgentEvent, MiiMessage[]> {
   const { model, cwd, permissions, hooks, signal, num_ctx } = opts
   const startTime = Date.now()
   const system = buildSystemPrompt(TOOLS, cwd)
   const ollamaTools = toOllamaTools(TOOLS)
 
-  const history: AnthropicMessage[] = [
+  const history: MiiMessage[] = [
     ...opts.history,
     { role: 'user', content: opts.userText },
   ]
@@ -176,7 +176,7 @@ export async function* runAgent(opts: RunAgentOpts): AsyncGenerator<AgentEvent, 
         const r: ToolResultBlock = {
           type: 'tool_result',
           tool_use_id: use.id,
-          content: `Permission denied for ${use.name}. Try an alternative tool if one fits; otherwise stop and report the task as completed (skip this step).`,
+          content: `Permission denied for ${use.name}.`,
           is_error: true,
         }
         results.push(r)
