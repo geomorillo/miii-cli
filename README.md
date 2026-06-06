@@ -1,12 +1,123 @@
 # miii
 
-The local-first AI coding agent for engineers who hate latency.
+> Your code never leaves your machine. No API keys. No cloud. No bullshit.
 
-miii transforms your terminal into a high-performance development environment by pairing a tight Ink TUI with Ollama. It is a zero-config, private companion that can read your code, write your features, and run your tests—all without a single byte leaving your machine.
+**miii** is a local-first AI coding agent that lives in your terminal. Powered by [Ollama](https://ollama.com), it reads your code, writes features, runs tests, and fixes bugs — entirely on your hardware, at native speed.
+
+[![npm](https://img.shields.io/npm/v/miii-agent)](https://www.npmjs.com/package/miii-agent)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
+
+---
 
 ## Demo
 
 ![miii demo](src/demo.gif)
+
+---
+
+## Why miii?
+
+Most AI coding tools are wrappers around cloud APIs. They're slow, expensive, and send your private code to someone else's server.
+
+miii is different:
+
+- **Local-first** — Powered by Ollama. Your code stays on your disk, period.
+- **Zero ceremony** — No API keys. No billing. No accounts. Just `miii`.
+- **Actually agentic** — miii doesn't just chat. It decomposes problems, calls tools, and verifies results like an engineer would.
+- **Fast** — No network round-trips. Response time is limited by your GPU, not a CDN.
+
+---
+
+## Installation
+
+### Prerequisites
+
+- **Node.js** ≥ 18
+- **Ollama** running locally — [install here](https://ollama.com/download)
+- A coding model pulled locally:
+
+```bash
+ollama pull qwen2.5-coder:14b
+# or any model you prefer
+ollama pull deepseek-coder-v2
+```
+
+### Install miii
+
+```bash
+npm install -g miii-agent
+```
+
+### Launch
+
+```bash
+miii
+```
+
+That's it.
+
+---
+
+## Usage
+
+Once inside the TUI, just type naturally:
+
+```
+> refactor the auth module to use async/await
+> @src/server.ts add rate limiting to all POST routes
+> why are my tests failing in utils/parser.ts
+```
+
+### Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Send prompt |
+| `@filename` | Attach file to context |
+| `/models` | Switch active Ollama model |
+| `/clear` | Reset conversation history |
+| `Esc` | Stop current generation or tool run |
+| `Ctrl+C` | Quit |
+
+---
+
+## Configuration
+
+Settings live in `~/.miii/config.json` and are created on first run.
+
+```json
+{
+  "model": "qwen2.5-coder:14b",
+  "ollamaHost": "http://localhost:11434",
+  "effort": "medium"
+}
+```
+
+| Field | Description | Values |
+|-------|-------------|--------|
+| `model` | Default Ollama model | any `ollama list` model |
+| `ollamaHost` | Ollama API endpoint | URL string |
+| `effort` | Controls temperature & limits | `low` \| `medium` \| `high` |
+
+---
+
+## Capabilities
+
+miii ships with a built-in tool suite the agent can invoke autonomously:
+
+| Tool | What it does |
+|------|-------------|
+| `read_file` | Read any file in your workspace |
+| `write_file` | Create new files |
+| `edit_file` | Precise string-level edits (no rewrites) |
+| `glob` | Pattern-match files across the project |
+| `grep` | Regex search across files |
+| `run_bash` | Execute shell commands |
+
+Every sensitive operation is gated by a permission system — you approve what the agent can touch.
+
+---
 
 ## Architecture
 
@@ -53,65 +164,36 @@ graph TD
     App -.->|"reads"| Config
 ```
 
-## The Philosophy
-
-Most AI agents are wrappers around cloud APIs. They are slow, expensive, and a privacy nightmare. miii is different:
-
-1. Local-First: Powered by Ollama. Your code stays on your disk.
-2. Zero Ceremony: No API keys. No billing. Just run miii and start coding.
-3. Engineering Mindset: miii doesn't just "chat". It treats every request as a bug, feature, or fix. It decomposes problems, executes tools, and verifies results.
-
-## Project Status
-
-This project is currently an MVP designed to demonstrate and refine basic AI coding skills. I am refurbishing older implementations and experimenting with the agent loop. Feel free to fork, modify, or do whatever you want with this codebase.
-
-
-## Capabilities
-
-miii is equipped with a suite of tools to interact with your workspace:
-
-- File System: read_file, write_file, edit_file (precise string replacement).
-- Discovery: glob (pattern matching), grep (regex search).
-- Execution: run_bash (shell command execution).
-
-Every sensitive operation is gated by a permission system. You decide what the agent can touch.
-
-## Quick Start
-
-### 1. Prerequisites
-- Node.js 18+
-- Ollama (running locally via ollama serve)
-- A coder model (e.g., ollama pull qwen2.5-coder:14b)
-
-### 2. Install
-npm i -g miii-agent
-
-### 3. Launch
-miii
-
-## TUI Cheat Sheet
-
-- Type & Enter: Send a prompt to the agent.
-- @file: Inline a file's content into the context.
-- /models: Switch your active Ollama model.
-- /clear: Reset conversation history.
-- Esc: Stop the current generation or tool execution.
-- Ctrl+C: Quit.
-
-## Configuration
-
-Global settings are stored in ~/.miii/config.json:
-- model: Your default LLM.
-- ollamaHost: Your Ollama API endpoint.
-- effort: Tuning for temperature and limits (low | medium | high).
-
+---
 
 ## Development
 
+```bash
 git clone https://github.com/maruakshay/miii-cli.git
 cd miii-cli
 npm install
 npm run dev
+```
+
+```bash
+npm run build   # production build
+npm run start   # run built output
+```
+
+---
+
+## Project Status
+
+MVP. Core agent loop works. Actively refining tool execution, streaming, and the permission model. PRs welcome — fork it, break it, improve it.
+
+---
 
 ## License
-MIT
+
+MIT © [maruakshay](https://github.com/maruakshay)
+
+---
+
+<p align="center">
+  Built for engineers who'd rather own their tools than rent them.
+</p>
