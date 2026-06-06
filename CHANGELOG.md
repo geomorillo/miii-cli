@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/maruakshay/miii-cli/compare/miii-cli-v0.1.2...miii-cli-v0.1.3) (2026-06-06)
+
+
+### Features
+
+* **prompt:** add goal-understanding and attention re-attend system ([61cadf1](https://github.com/maruakshay/miii-cli/commit/61cadf133d84dd9cb4fb889e01113609dcdfe991))
+
 ## [0.1.2](https://github.com/maruakshay/miii-cli/compare/miii-cli-v0.1.1...miii-cli-v0.1.2) (2026-06-06)
 
 
