@@ -340,7 +340,7 @@ export function ChatView({
 
       {error && (
         <Box flexDirection="row" marginBottom={1}>
-          <Text color="red">{'● '}</Text>
+          <Text color="red">● </Text>
           <Text color="red">{error}</Text>
         </Box>
       )}

@@ -4,6 +4,51 @@ The local-first AI coding agent for engineers who hate latency.
 
 miii transforms your terminal into a high-performance development environment by pairing a tight Ink TUI with Ollama. It is a zero-config, private companion that can read your code, write your features, and run your tests—all without a single byte leaving your machine.
 
+## Architecture
+
+```mermaid
+graph TD
+    User["User (Terminal)"] -->|"prompt / @file / /cmd"| InputBar
+
+    subgraph TUI ["Ink TUI (React)"]
+        InputBar["InputBar"] --> App["App.tsx"]
+        App --> ChatView["ChatView"]
+        App --> CommandPalette["CommandPalette\n(/models, /clear)"]
+        App --> FilePicker["FilePicker (@file)"]
+        App --> ModelsView["ModelsView"]
+    end
+
+    App -->|"user message"| AgentLoop["Agent Loop\n(agent/loop.ts)"]
+
+    subgraph Agent ["Agent Layer"]
+        AgentLoop -->|"chat request"| Adapter["Ollama Adapter\n(agent/adapter.ts)"]
+        AgentLoop -->|"tool call"| ToolRegistry["Tool Registry\n(tools/registry.ts)"]
+        AgentLoop -->|"permission check"| Policy["Permission Policy\n(permissions/policy.ts)"]
+        AgentLoop -->|"events"| EventBus["Event Bus\n(hooks/bus.ts)"]
+    end
+
+    subgraph Tools ["Tools"]
+        ToolRegistry --> ReadFile["read_file"]
+        ToolRegistry --> WriteFile["write_file"]
+        ToolRegistry --> EditFile["edit_file"]
+        ToolRegistry --> Glob["glob"]
+        ToolRegistry --> Grep["grep"]
+        ToolRegistry --> RunBash["run_bash"]
+    end
+
+    Adapter -->|"HTTP streaming"| Ollama["Ollama\n(local LLM server)"]
+    Ollama -->|"model response\n+ tool calls"| Adapter
+
+    Tools -->|"tool results"| AgentLoop
+    EventBus -->|"stream events"| ChatView
+
+    subgraph Storage ["Local Storage"]
+        Config["~/.miii/config.json\n(model, host, effort)"]
+    end
+
+    App -.->|"reads"| Config
+```
+
 ## The Philosophy
 
 Most AI agents are wrappers around cloud APIs. They are slow, expensive, and a privacy nightmare. miii is different:
@@ -56,7 +101,6 @@ Global settings are stored in ~/.miii/config.json:
 - ollamaHost: Your Ollama API endpoint.
 - effort: Tuning for temperature and limits (low | medium | high).
 
-Project-specific permissions are managed in .miii/settings.local.json.
 
 ## Development
 
