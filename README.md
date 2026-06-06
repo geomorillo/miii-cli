@@ -4,6 +4,10 @@ The local-first AI coding agent for engineers who hate latency.
 
 miii transforms your terminal into a high-performance development environment by pairing a tight Ink TUI with Ollama. It is a zero-config, private companion that can read your code, write your features, and run your tests—all without a single byte leaving your machine.
 
+## Demo
+
+![miii demo](src/demo.gif)
+
 ## Architecture
 
 ```mermaid
