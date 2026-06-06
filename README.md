@@ -12,7 +12,7 @@
 
 ## Demo
 
-![miii demo](src/demo.gif)
+![miii demo](demo.gif)
 
 ---
 
