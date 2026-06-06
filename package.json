@@ -1,6 +1,6 @@
 {
-  "name": "miii-cli",
-  "version": "0.1.5",
+  "name": "miii",
+  "version": "0.1.0",
   "description": "Terminal AI coding agent powered by Ollama",
   "type": "module",
   "bin": {
