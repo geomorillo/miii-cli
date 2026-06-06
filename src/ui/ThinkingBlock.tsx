@@ -37,6 +37,7 @@ export function ThinkingBlock({ content }: { content?: string }) {
       <Box>
         <Text color="blue">{FRAMES[frame]} </Text>
         <Text dimColor italic>thinking…</Text>
+        <Text dimColor> · ctrl+t to {visible ? 'hide' : 'show'} thoughts</Text>
       </Box>
       {visible && content ? (
         <Box marginLeft={2}>

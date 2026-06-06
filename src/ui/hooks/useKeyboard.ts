@@ -73,8 +73,8 @@ export function useKeyboard(opts: KeyboardOptions) {
   useInput((char, key) => {
     // --- global shortcuts ---
     if (key.ctrl && char === 'c') { exit(); return }
-    // Ctrl+Shift+O toggles thinking block content visibility
-    if (key.ctrl && key.shift && char === 'O') { toggleThinkingVisible(); return }
+    // Ctrl+T toggles thinking block content visibility
+    if (key.ctrl && char === 't') { toggleThinkingVisible(); return }
 
     if (key.escape && busyRef.current && abortRef.current) {
       abortRef.current.abort()
