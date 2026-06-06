@@ -19,6 +19,7 @@ import { FilePicker, parseMention, searchFiles } from './FilePicker.js'
 import { ChatView } from './ChatView.js'
 import { useAgentRunner } from './hooks/useAgentRunner.js'
 import { useKeyboard } from './hooks/useKeyboard.js'
+import { checkForUpdate } from '../updateCheck.js'
 
 type AppState = 'loading' | 'select-model' | 'ready' | 'models'
 
@@ -33,6 +34,7 @@ export function App() {
   const [activeCtx, setActiveCtx] = useState<number | null>(null)
   const [state, setState] = useState<AppState>('loading')
   const [cursor, setCursor] = useState(0)
+  const [updateAvailable, setUpdateAvailable] = useState<string | null>(null)
 
   // --- input bar ---
   const [input, setInput] = useState('')
@@ -41,6 +43,10 @@ export function App() {
 
   // --- agent streaming & permission state (owned by hook) ---
   const agent = useAgentRunner(cfg.model, activeCtx)
+
+  useEffect(() => {
+    checkForUpdate().then((v) => { if (v) setUpdateAvailable(v) })
+  }, [])
 
   // Load available models on mount; advance past loading screen once done.
   useEffect(() => {
@@ -100,6 +106,12 @@ export function App() {
   return (
     <Box flexDirection="column" paddingX={1}>
       <WelcomeBlock model={cfg.model} activeCtx={activeCtx} effort={effort} cwd={cwd} error={agent.error} />
+
+      {updateAvailable && (
+        <Box marginLeft={2} marginBottom={1}>
+          <Text color="yellow">{`↑ update available: v${updateAvailable} — run: npm i -g miii-agent`}</Text>
+        </Box>
+      )}
 
       {state === 'loading' && !agent.error && (
         <Box marginLeft={2} marginBottom={1}>
