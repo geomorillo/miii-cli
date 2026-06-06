@@ -2,7 +2,7 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "package-name": "miii-cli",
+      "package-name": "miii-agent",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true
     }

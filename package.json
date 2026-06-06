@@ -1,5 +1,5 @@
 {
-  "name": "miii",
+  "name": "miii-agent",
   "version": "0.1.0",
   "description": "Terminal AI coding agent powered by Ollama",
   "type": "module",

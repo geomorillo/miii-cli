@@ -80,7 +80,7 @@ Every sensitive operation is gated by a permission system. You decide what the a
 - A coder model (e.g., ollama pull qwen2.5-coder:14b)
 
 ### 2. Install
-npm i -g miii-cli
+npm i -g miii-agent
 
 ### 3. Launch
 miii
