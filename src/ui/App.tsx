@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react'
 import { Box, Text, useApp } from 'ink'
 import { homedir } from 'os'
+import { sep } from 'path'
 import { listModels, modelContext } from '../ollama/client.js'
 import { loadConfig, type Effort } from '../config.js'
 import { WelcomeBlock } from './WelcomeBlock.js'
@@ -23,7 +24,7 @@ type AppState = 'loading' | 'select-model' | 'ready' | 'models'
 
 export function App() {
   const { exit } = useApp()
-  const cwd = process.cwd().replace(homedir(), '~')
+  const cwd = process.cwd().replace(homedir(), '~').split(sep).join('/')
 
   // --- config & model list ---
   const [cfg, setCfg] = useState(loadConfig())
@@ -174,6 +175,11 @@ export function App() {
           })()}
 
           <InputBar input={input} disabled={agent.busy} processingLabel={agent.processingLabel} />
+          {!agent.busy && (
+            <Box marginLeft={2} marginBottom={1}>
+              <Text dimColor>type / to see commands</Text>
+            </Box>
+          )}
         </>
       )}
     </Box>

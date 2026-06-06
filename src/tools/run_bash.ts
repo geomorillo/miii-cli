@@ -8,7 +8,7 @@ interface Input {
 
 export const run_bash: Tool<Input> = {
   name: 'run_bash',
-  description: 'Execute a shell command via bash. Returns stdout+stderr. Non-interactive only.',
+  description: 'Execute a shell command (bash on Unix, cmd on Windows). Returns stdout+stderr. Non-interactive only.',
   input_schema: {
     type: 'object',
     properties: {
@@ -19,7 +19,10 @@ export const run_bash: Tool<Input> = {
   },
   handler: async ({ command, timeout_ms }) => {
     try {
-      const { stdout, stderr, exitCode } = await execa('bash', ['-c', command], {
+      const isWin = process.platform === 'win32'
+      const shell = isWin ? 'cmd' : 'bash'
+      const shellArgs = isWin ? ['/c', command] : ['-c', command]
+      const { stdout, stderr, exitCode } = await execa(shell, shellArgs, {
         timeout: timeout_ms ?? 30000,
         reject: false,
         all: false,

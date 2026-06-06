@@ -13,7 +13,7 @@ export function InputBar({ input, disabled, processingLabel }: Props) {
   const [frame, setFrame] = useState(0)
   useEffect(() => {
     if (!disabled) return
-    const t = setInterval(() => setFrame((f) => (f + 1) % SPIN.length), 80)
+    const t = setInterval(() => setFrame((f) => (f + 1) % SPIN.length), 150)
     return () => clearInterval(t)
   }, [disabled])
 
@@ -26,7 +26,6 @@ export function InputBar({ input, disabled, processingLabel }: Props) {
       borderRight={false}
       borderColor={disabled ? 'yellow' : 'white dim'}
       paddingX={1}
-      marginBottom={1}
     >
       {disabled ? (
         <>

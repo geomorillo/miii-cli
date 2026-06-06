@@ -17,7 +17,7 @@
     "start": "tsx src/cli.tsx",
     "dev": "tsx watch src/cli.tsx",
     "build": "tsup",
-    "postbuild": "chmod +x dist/cli.js",
+    "postbuild": "node -e \"if(process.platform!=='win32')require('fs').chmodSync('dist/cli.js',0o755)\"",
     "prepack": "npm run build"
   },
   "repository": {

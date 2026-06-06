@@ -234,10 +234,12 @@ function AssistantMessage({ msg }: { msg: ChatMessage }) {
         return <ToolUseLine key={u.id} use={u} result={r} />
       })}
       {msg.tokens && (
-        <Text dimColor>
-          {`  ↳ Completed · ${formatTokens(msg.tokens.prompt_eval + msg.tokens.eval)} tokens`}
-          {msg.duration != null ? ` · ${formatDuration(msg.duration)}` : ''}
-        </Text>
+        <Box marginLeft={2}>
+          <Text dimColor>
+            {`↳ Completed · ${formatTokens(msg.tokens.prompt_eval + msg.tokens.eval)} tokens`}
+            {msg.duration != null ? ` · ${formatDuration(msg.duration)}` : ''}
+          </Text>
+        </Box>
       )}
     </Box>
   )
@@ -306,7 +308,7 @@ export function ChatView({
   activeToolResults,
 }: Props) {
   return (
-    <Box flexDirection="column" marginLeft={2} marginBottom={1}>
+    <Box flexDirection="column" marginLeft={1} marginBottom={1}>
       {messages.map((msg, i) =>
         msg.role === 'user' ? (
           <Box key={i} flexDirection="row" marginBottom={1}>

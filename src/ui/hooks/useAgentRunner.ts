@@ -10,7 +10,7 @@ import type { ChatMessage, PermissionRequest, ToolUseDisplay, ToolResultDisplay 
 import type { MiiMessage } from '../../agent/types.js'
 
 // How often (ms) we flush streaming text to React state — avoids a re-render per token.
-const FLUSH_MS = 50
+const FLUSH_MS = 100
 
 export function useAgentRunner(model: string | undefined, activeCtx: number | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
