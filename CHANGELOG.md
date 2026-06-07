@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.4](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.3...miii-agent-v0.1.4) (2026-06-07)
+
+
+### Features
+
+* add npm package + release-please automation ([60b48df](https://github.com/maruakshay/miii-cli/commit/60b48dfbaec822f81b3bebf538f7f38c79facd5f))
+* implement update check functionality in App component ([6e6ec62](https://github.com/maruakshay/miii-cli/commit/6e6ec62d6681d829cafd12d2f0f0b768c48798d5))
+* **prompt:** add goal-understanding and attention re-attend system ([61cadf1](https://github.com/maruakshay/miii-cli/commit/61cadf133d84dd9cb4fb889e01113609dcdfe991))
+* **ui:** change thinking toggle shortcut to ctrl+t ([97be0cd](https://github.com/maruakshay/miii-cli/commit/97be0cdc805bb0e97e52923152d298bfc613a3c9))
+* **ui:** polish permission prompt, unify cursor glyphs, add empty state ([815bab2](https://github.com/maruakshay/miii-cli/commit/815bab2f259b95fdc277b1533fa3ab09e590b721))
+
+
+### Bug Fixes
+
+* **pkg:** correct bin path and use prepack for build ([cd98db2](https://github.com/maruakshay/miii-cli/commit/cd98db288c943a753575ec842a2cb71c4d429fb3))
+* update demo GIF path in README ([99843d9](https://github.com/maruakshay/miii-cli/commit/99843d9073e7cc041cdb7098411c78ca7e7f7c13))
+
 ## [0.1.3](https://github.com/maruakshay/miii-cli/compare/miii-cli-v0.1.2...miii-cli-v0.1.3) (2026-06-06)
 
 
