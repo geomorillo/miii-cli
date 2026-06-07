@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.4...miii-agent-v0.1.5) (2026-06-07)
+
+
+### Features
+
+* **ui:** add sessions view and align command palette descriptions ([8d052d7](https://github.com/maruakshay/miii-cli/commit/8d052d7dc58687b8c49e88d35f11c9d74cf71ec1))
+
 ## [0.1.4](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.3...miii-agent-v0.1.4) (2026-06-07)
 
 
