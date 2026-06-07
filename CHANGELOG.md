@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.5...miii-agent-v0.1.6) (2026-06-07)
+
+
+### Features
+
+* **ui:** handle missing/stopped ollama gracefully ([bda0da3](https://github.com/maruakshay/miii-cli/commit/bda0da37f2b2eb697ffe4bfc810efeea9f920b64))
+
 ## [0.1.5](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.4...miii-agent-v0.1.5) (2026-06-07)
 
 
