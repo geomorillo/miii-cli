@@ -63,8 +63,8 @@ export function FilePicker({ matches, cursor }: Props) {
   return (
     <Box
       flexDirection="column"
-      borderStyle="single"
-      borderColor="white dim"
+      borderStyle="round"
+      borderColor="gray"
       marginX={1}
       marginBottom={0}
       paddingX={1}
@@ -73,8 +73,8 @@ export function FilePicker({ matches, cursor }: Props) {
         const active = i === cursor
         return (
           <Box key={f}>
-            <Text bold={active} color={active ? 'white' : undefined} dimColor={!active}>
-              {active ? '› ' : '  '}{f}
+            <Text bold={active} color={active ? 'blue' : undefined} dimColor={!active}>
+              {active ? '❯ ' : '  '}{f}
             </Text>
           </Box>
         )

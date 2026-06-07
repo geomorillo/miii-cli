@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink'
 import { ThinkingBlock } from './ThinkingBlock.js'
 import type { ChatMessage, ToolUseDisplay, ToolResultDisplay, PermissionRequest } from './types.js'
+import { EMPTY_STATE_HINTS, EMPTY_STATE_TITLE, } from './constants.js'
 
 interface Props {
   messages: ChatMessage[]
@@ -265,9 +266,10 @@ function summarizeInput(input: unknown): string {
 }
 
 function PermissionPrompt({ req, cursor }: { req: PermissionRequest; cursor: number }) {
-  const options: Array<{ label: string; key: 'yes' | 'no' }> = [
+  const label = TOOL_LABEL[req.toolName] ?? req.toolName
+  const options = [
     { label: 'Yes', key: 'yes' },
-    { label: 'No, and tell me what to do differently', key: 'no' },
+    { label: 'No', key: 'no' },
   ]
   const summary = summarizeInput(req.input)
   return (
@@ -275,7 +277,7 @@ function PermissionPrompt({ req, cursor }: { req: PermissionRequest; cursor: num
       <Text color="blue" bold>Tool use</Text>
       <Box marginTop={1}>
         <Text>
-          Allow <Text bold>{req.toolName}</Text>?
+          Allow <Text bold>{label}</Text>?
         </Text>
       </Box>
       {summary && (
@@ -307,8 +309,18 @@ export function ChatView({
   activeToolUses,
   activeToolResults,
 }: Props) {
+  const empty =
+    messages.length === 0 && !streaming && !thinking && !pendingPermission && !error
   return (
     <Box flexDirection="column" marginLeft={1} marginBottom={1}>
+      {empty && (
+        <Box flexDirection="column" marginBottom={1}>
+          <Text dimColor>{EMPTY_STATE_TITLE}</Text>
+          {EMPTY_STATE_HINTS.map((h, i) => (
+            <Text key={i} dimColor>{'  '}{h}</Text>
+          ))}
+        </Box>
+      )}
       {messages.map((msg, i) =>
         msg.role === 'user' ? (
           <Box key={i} flexDirection="row" marginBottom={1}>

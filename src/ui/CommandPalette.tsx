@@ -23,8 +23,8 @@ export function CommandPalette({ filter, cursor }: Props) {
   return (
     <Box
       flexDirection="column"
-      borderStyle="single"
-      borderColor="white dim"
+      borderStyle="round"
+      borderColor="gray"
       marginX={1}
       marginBottom={0}
       paddingX={1}
@@ -32,9 +32,9 @@ export function CommandPalette({ filter, cursor }: Props) {
       {filtered.map((cmd, i) => {
         const active = i === cursor
         return (
-          <Box key={cmd.name} gap={2}>
-            <Text bold={active} color={active ? 'white' : undefined} dimColor={!active}>
-              {cmd.name}
+          <Box key={cmd.name} gap={1}>
+            <Text bold={active} color={active ? 'blue' : undefined} dimColor={!active}>
+              {active ? '❯ ' : '  '}{cmd.name}
             </Text>
             <Text dimColor>{cmd.description}</Text>
           </Box>
