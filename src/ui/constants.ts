@@ -4,7 +4,9 @@
 export const EMPTY_STATE_HINTS: string[] = [
   '• explain @file — reference a file with @',
   '• /models — switch model or effort',
-  '• ctrl+t — toggle thinking · esc — cancel',
+  '• /new — start a new chat',
+  '• /sessions — view saved chats',
+  '• ctrl+t — toggle thinking',
 ]
 
 export const EMPTY_STATE_TITLE = 'Ask anything, or try:'

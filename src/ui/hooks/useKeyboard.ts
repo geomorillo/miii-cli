@@ -9,8 +9,17 @@ import { setModel, setEffort, type Effort } from '../../config.js'
 import { filteredCommands } from '../CommandPalette.js'
 import { parseMention, searchFiles } from '../FilePicker.js'
 import { toggleThinkingVisible } from '../ThinkingBlock.js'
-import type { MiiMessage } from '../../agent/types.js'
-import type { PermissionRequest } from '../types.js'
+import {
+  summarizeMessage,
+  persistSession,
+  listSessions,
+  loadSession,
+  deleteSession,
+  toDisplayMessages,
+  newSessionId,
+  type SessionMeta,
+} from '../../session/store.js'
+import type { useAgentRunner } from './useAgentRunner.js'
 
 const EFFORTS: Effort[] = ['low', 'medium', 'high']
 
@@ -28,15 +37,8 @@ interface KeyboardOptions {
   setCfg: (fn: (c: any) => any) => void
   setActiveCtx: (n: number) => void
 
-  // permission prompt
-  pendingPermissionRef: React.MutableRefObject<PermissionRequest | null>
-  permissionCursor: number
-  setPermissionCursor: (fn: (i: number) => number) => void
-  resolvePermission: (cursor: number) => void
-
-  // busy / abort
-  busyRef: React.MutableRefObject<boolean>
-  abortRef: React.MutableRefObject<AbortController | null>
+  // agent runner (streaming, permission, chat actions, refs)
+  agent: ReturnType<typeof useAgentRunner>
 
   // input bar
   input: string
@@ -46,27 +48,41 @@ interface KeyboardOptions {
   filePickerCursor: number
   setFilePickerCursor: (fn: (i: number) => number) => void
 
-  // chat actions
-  sendMessage: (text: string) => void
-  setMessages: (fn: (m: any[]) => any[]) => void
-  setAgentHistory: (h: MiiMessage[]) => void
-  setStreamingContent: (s: string) => void
-  setThinkingContent: (s: string) => void
-  setActiveToolUses: (a: any[]) => void
-  setActiveToolResults: (a: any[]) => void
-  setError: (e: string | null) => void
+  // sessions
+  sessionId: string
+  setSessionId: (id: string) => void
+  sessions: SessionMeta[]
+  setSessions: (s: SessionMeta[]) => void
+  setNotice: (s: string | null) => void
 }
 
 export function useKeyboard(opts: KeyboardOptions) {
   const {
     exit, state, setState,
     models, cursor, setCursor, contexts, cfg, setCfg, setActiveCtx,
+    agent,
+    input, setInput, paletteCursor, setPaletteCursor, filePickerCursor, setFilePickerCursor,
+    sessionId, setSessionId, sessions, setSessions, setNotice,
+  } = opts
+
+  const {
     pendingPermissionRef, permissionCursor, setPermissionCursor, resolvePermission,
     busyRef, abortRef,
-    input, setInput, paletteCursor, setPaletteCursor, filePickerCursor, setFilePickerCursor,
-    sendMessage, setMessages, setAgentHistory, setStreamingContent, setThinkingContent,
+    sendMessage, agentHistory, setMessages, setAgentHistory, setStreamingContent, setThinkingContent,
     setActiveToolUses, setActiveToolResults, setError,
-  } = opts
+  } = agent
+
+  /** Wipe all chat/streaming state back to an empty session. */
+  function clearSession() {
+    setMessages(() => [])
+    setAgentHistory([])
+    setStreamingContent('')
+    setThinkingContent('')
+    setActiveToolUses([])
+    setActiveToolResults([])
+    setError(null)
+    setNotice(null)
+  }
 
   const effort: Effort = cfg.effort ?? 'medium'
 
@@ -106,6 +122,38 @@ export function useKeyboard(opts: KeyboardOptions) {
         } else if (key.escape) {
           setState('ready')
         }
+      }
+      return
+    }
+
+    // --- resume picker screen (/resume) ---
+    if (state === 'sessions') {
+      if (key.upArrow) { setCursor((i) => Math.max(0, i - 1)); return }
+      if (key.downArrow) { setCursor((i) => Math.min(sessions.length - 1, i + 1)); return }
+      if (key.escape) { setState('ready'); return }
+      // delete the highlighted session (d / x / delete / backspace)
+      if ((char === 'd' || char === 'x' || key.delete || key.backspace) && sessions[cursor]) {
+        const meta = sessions[cursor]
+        deleteSession(meta.id)
+        const next = listSessions()
+        setSessions(next)
+        setCursor((i) => Math.max(0, Math.min(i, next.length - 1)))
+        setNotice(`deleted · ${meta.title}`)
+        return
+      }
+      if (key.return && sessions[cursor]) {
+        const meta = sessions[cursor]
+        const history = loadSession(meta.id)
+        setAgentHistory(history)
+        setMessages(toDisplayMessages(history))
+        setStreamingContent('')
+        setThinkingContent('')
+        setActiveToolUses([])
+        setActiveToolResults([])
+        setError(null)
+        setSessionId(meta.id)
+        setNotice(`resumed · ${meta.title}`)
+        setState('ready')
       }
       return
     }
@@ -156,16 +204,33 @@ export function useKeyboard(opts: KeyboardOptions) {
           setCursor(() => Math.max(0, models.findIndex((m) => m === cfg.model)))
           setState('models')
         } else if (trimmed === '/clear') {
-          setMessages(() => [])
-          setAgentHistory([])
-          setStreamingContent('')
-          setThinkingContent('')
-          setActiveToolUses([])
-          setActiveToolResults([])
-          setError(null)
+          clearSession()
+        } else if (trimmed === '/new') {
+          // Current session is already auto-saved with an LLM title; just start
+          // a fresh session id and wipe the chat.
+          if (agentHistory.length) setNotice('session saved')
+          setSessionId(newSessionId())
+          clearSession()
+        } else if (trimmed === '/sessions') {
+          setSessions(listSessions())
+          setCursor(() => 0)
+          setState('sessions')
         } else if (trimmed === '/exit') {
           exit()
         } else if (trimmed) {
+          setNotice(null)
+          // On the first message of a session, summarise it into a title and
+          // persist (background, best-effort).
+          if (!agentHistory.length && cfg.model) {
+            const id = sessionId
+            const model = cfg.model
+            void (async () => {
+              try {
+                const title = await summarizeMessage(model, trimmed)
+                persistSession(id, [{ role: 'user', content: trimmed }], title)
+              } catch { /* best-effort */ }
+            })()
+          }
           sendMessage(trimmed)
         }
         setInput(() => '')

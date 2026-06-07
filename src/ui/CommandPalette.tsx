@@ -7,6 +7,8 @@ export interface Command {
 
 export const COMMANDS: Command[] = [
   { name: '/models', description: 'switch model or adjust effort' },
+  { name: '/new',    description: 'save current session and start fresh' },
+  { name: '/sessions', description: 'list sessions and resume one' },
   { name: '/clear',  description: 'clear chat and reset context' },
   { name: '/exit',   description: 'quit miii' },
 ]
@@ -20,6 +22,8 @@ export function CommandPalette({ filter, cursor }: Props) {
   const filtered = COMMANDS.filter((c) => c.name.startsWith(filter))
   if (filtered.length === 0) return null
 
+  const nameWidth = Math.max(...filtered.map((c) => c.name.length))
+
   return (
     <Box
       flexDirection="column"
@@ -32,9 +36,9 @@ export function CommandPalette({ filter, cursor }: Props) {
       {filtered.map((cmd, i) => {
         const active = i === cursor
         return (
-          <Box key={cmd.name} gap={1}>
+          <Box key={cmd.name} gap={2}>
             <Text bold={active} color={active ? 'blue' : undefined} dimColor={!active}>
-              {active ? '❯ ' : '  '}{cmd.name}
+              {active ? '❯ ' : '  '}{cmd.name.padEnd(nameWidth)}
             </Text>
             <Text dimColor>{cmd.description}</Text>
           </Box>

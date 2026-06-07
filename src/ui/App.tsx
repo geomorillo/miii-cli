@@ -14,14 +14,16 @@ import { WelcomeBlock } from './WelcomeBlock.js'
 import { ModelList } from './ModelList.js'
 import { InputBar } from './InputBar.js'
 import { ModelsView } from './ModelsView.js'
+import { SessionsView } from './SessionsView.js'
 import { CommandPalette } from './CommandPalette.js'
+import { persistSession, newSessionId, type SessionMeta } from '../session/store.js'
 import { FilePicker, parseMention, searchFiles } from './FilePicker.js'
 import { ChatView } from './ChatView.js'
 import { useAgentRunner } from './hooks/useAgentRunner.js'
 import { useKeyboard } from './hooks/useKeyboard.js'
 import { checkForUpdate } from '../updateCheck.js'
 
-type AppState = 'loading' | 'select-model' | 'ready' | 'models'
+type AppState = 'loading' | 'select-model' | 'ready' | 'models' | 'sessions'
 
 export function App() {
   const { exit } = useApp()
@@ -36,6 +38,11 @@ export function App() {
   const [cursor, setCursor] = useState(0)
   const [updateAvailable, setUpdateAvailable] = useState<string | null>(null)
 
+  // --- sessions ---
+  const [sessionId, setSessionId] = useState(() => newSessionId())
+  const [sessions, setSessions] = useState<SessionMeta[]>([])
+  const [notice, setNotice] = useState<string | null>(null)
+
   // --- input bar ---
   const [input, setInput] = useState('')
   const [paletteCursor, setPaletteCursor] = useState(0)
@@ -47,6 +54,11 @@ export function App() {
   useEffect(() => {
     checkForUpdate().then((v) => { if (v) setUpdateAvailable(v) })
   }, [])
+
+  // Auto-save the active session to disk every time the agent history grows.
+  useEffect(() => {
+    if (agent.agentHistory.length) persistSession(sessionId, agent.agentHistory)
+  }, [agent.agentHistory, sessionId])
 
   // Load available models on mount; advance past loading screen once done.
   useEffect(() => {
@@ -75,21 +87,9 @@ export function App() {
   useKeyboard({
     exit, state, setState,
     models, cursor, setCursor, contexts, cfg, setCfg, setActiveCtx,
-    pendingPermissionRef: agent.pendingPermissionRef,
-    permissionCursor: agent.permissionCursor,
-    setPermissionCursor: agent.setPermissionCursor,
-    resolvePermission: agent.resolvePermission,
-    busyRef: agent.busyRef,
-    abortRef: agent.abortRef,
+    agent,
     input, setInput, paletteCursor, setPaletteCursor, filePickerCursor, setFilePickerCursor,
-    sendMessage: agent.sendMessage,
-    setMessages: agent.setMessages,
-    setAgentHistory: agent.setAgentHistory,
-    setStreamingContent: agent.setStreamingContent,
-    setThinkingContent: agent.setThinkingContent,
-    setActiveToolUses: agent.setActiveToolUses,
-    setActiveToolResults: agent.setActiveToolResults,
-    setError: agent.setError,
+    sessionId, setSessionId, sessions, setSessions, setNotice,
   })
 
   const effort: Effort = cfg.effort ?? 'medium'
@@ -153,8 +153,17 @@ export function App() {
         />
       )}
 
+      {state === 'sessions' && (
+        <SessionsView sessions={sessions} cursor={cursor} />
+      )}
+
       {state === 'ready' && (
         <>
+          {notice && (
+            <Box marginLeft={2} marginBottom={1}>
+              <Text color="green">{`✓ ${notice}`}</Text>
+            </Box>
+          )}
           <ChatView
             messages={agent.messages}
             streaming={agent.streaming}
