@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react'
 import { Box, Text, useApp } from 'ink'
 import { homedir } from 'os'
 import { sep } from 'path'
-import { listModels, modelContext } from '../ollama/client.js'
+import { listModels, modelContext, ollamaInstalled, OLLAMA_NOT_INSTALLED } from '../ollama/client.js'
 import { loadConfig, type Effort } from '../config.js'
 import { WelcomeBlock } from './WelcomeBlock.js'
 import { ModelList } from './ModelList.js'
@@ -37,6 +37,7 @@ export function App() {
   const [state, setState] = useState<AppState>('loading')
   const [cursor, setCursor] = useState(0)
   const [updateAvailable, setUpdateAvailable] = useState<string | null>(null)
+  const [ollamaDown, setOllamaDown] = useState(false)
 
   // --- sessions ---
   const [sessionId, setSessionId] = useState(() => newSessionId())
@@ -77,7 +78,8 @@ export function App() {
       })
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err)
-        agent.setError(msg)
+        agent.setError(ollamaInstalled() ? msg : OLLAMA_NOT_INSTALLED)
+        setOllamaDown(true)
         setModels([])
         setState(cfg.model ? 'ready' : 'select-model')
       })
@@ -195,11 +197,15 @@ export function App() {
             return <FilePicker matches={searchFiles(process.cwd(), m.query)} cursor={filePickerCursor} />
           })()}
 
-          <InputBar input={input} disabled={agent.busy} processingLabel={agent.processingLabel} />
-          {!agent.busy && (
-            <Box marginLeft={2} marginBottom={1}>
-              <Text dimColor>type / to see commands</Text>
-            </Box>
+          {!ollamaDown && (
+            <>
+              <InputBar input={input} disabled={agent.busy} processingLabel={agent.processingLabel} />
+              {!agent.busy && (
+                <Box marginLeft={2} marginBottom={1}>
+                  <Text dimColor>type / to see commands</Text>
+                </Box>
+              )}
+            </>
           )}
         </>
       )}

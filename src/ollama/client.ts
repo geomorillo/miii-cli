@@ -1,11 +1,25 @@
 import { Ollama, type Message, type Tool, type ChatResponse } from 'ollama'
+import { execFileSync } from 'child_process'
 import type { OllamaMessage, OllamaTool, ChatChunk } from './types.js'
 
 const ollama = new Ollama({
   host: process.env.OLLAMA_HOST ?? 'http://localhost:11434',
 })
 
+export const OLLAMA_NOT_INSTALLED =
+  'Ollama is not installed. Install it with: npm i -g ollama\nOr download from https://ollama.com/download'
 const OLLAMA_NOT_RUNNING = 'Ollama is not running. Start it with: ollama serve'
+
+/** True if the `ollama` binary is on PATH. */
+export function ollamaInstalled(): boolean {
+  try {
+    const cmd = process.platform === 'win32' ? 'where' : 'which'
+    execFileSync(cmd, ['ollama'], { stdio: 'ignore' })
+    return true
+  } catch {
+    return false
+  }
+}
 
 const HARMONY_RE = /<\|?\/?(?:channel|message|start|end|return|constrain|assistant|user|system|developer|tool|tool_call|tool_response|final|analysis|commentary)\|?>/gi
 const CHANNEL_LABEL_RE = /^(?:analysis|commentary|final)\s*(?=\w)/i
