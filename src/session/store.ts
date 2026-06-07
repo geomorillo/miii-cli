@@ -1,7 +1,10 @@
 /**
  * Session store — Claude Code-style persistent chat sessions.
  *
- * Each session is an append-style JSONL file at `./.miii/session/<id>.jsonl`:
+ * Sessions live globally under `~/.miii/projects/<encoded-cwd>/session/`,
+ * keyed by the project directory (like Claude Code) so each project keeps its
+ * own history without writing into the project tree. Each session is an
+ * append-style JSONL file at `<dir>/<id>.jsonl`:
  *   line 1   → { type: 'meta', ...SessionMeta }
  *   line 2.. → { type: 'message', message: MiiMessage }
  *
@@ -10,12 +13,18 @@
  */
 import { writeFileSync, mkdirSync, existsSync, readdirSync, readFileSync, rmSync } from 'fs'
 import { join } from 'path'
+import { homedir } from 'os'
 import { randomUUID } from 'crypto'
 import { chat } from '../ollama/client.js'
 import type { MiiMessage } from '../agent/types.js'
 import type { ChatMessage } from '../ui/types.js'
 
-const SESSION_DIR = join(process.cwd(), '.miii', 'session')
+/** Encode the cwd into a single dir-safe segment, Claude Code-style. */
+function encodeProjectDir(cwd: string): string {
+  return cwd.replace(/[/\\]/g, '-').replace(/^-+/, '')
+}
+
+const SESSION_DIR = join(homedir(), '.miii', 'projects', encodeProjectDir(process.cwd()), 'session')
 
 export interface SessionMeta {
   id: string
