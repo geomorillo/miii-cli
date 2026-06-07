@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.6...miii-agent-v0.1.7) (2026-06-07)
+
+
+### Features
+
+* **session:** store sessions globally per-project like Claude Code ([690eaa0](https://github.com/maruakshay/miii-cli/commit/690eaa069d99ece77ddfe1ad0d8dc3d835ce95e4))
+
 ## [0.1.6](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.5...miii-agent-v0.1.6) (2026-06-07)
 
 
