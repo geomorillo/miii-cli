@@ -133,6 +133,34 @@ Every sensitive operation is gated by a permission system — you approve what t
 
 ---
 
+## Checking your setup
+
+miii is model-agnostic — but not every local model can actually drive an agent. A model that can't emit clean tool calls will chat at you instead of editing files. `miii doctor` tells you which of *your* installed models are up to the job, before you waste time wondering why nothing happens.
+
+```bash
+miii doctor                     # check every local model (from `ollama list`)
+miii doctor qwen2.5-coder:7b    # check one model
+miii doctor gemma4:e4b grep     # one model, only scenarios matching "grep"
+```
+
+It runs the real agent against a handful of concrete tasks (edit a file, read-and-answer, create a file, locate a definition) and checks the *outcome* — did the file actually change, was the answer right — then prints a verdict per model:
+
+```
+=== qwen3-coder ===
+PASS  edit-exact-string   ...
+PASS  read-then-answer    ...
+PASS  create-new-file     ...
+PASS  grep-locate         ...
+  → qwen3-coder: 4/4 — ready
+
+=== gemma4:e4b ===
+  → gemma4:e4b: 1/4 — not recommended — weak tool-calling
+```
+
+With more than one model it also prints a compatibility matrix (`+` pass, `.` fail). Cloud models are skipped by default; name one explicitly to include it. If a model comes back `marginal` or `not recommended`, pull a stronger coding model and try again.
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -196,11 +224,25 @@ npm run dev
 ```
 
 ```bash
-npm run build   # production build
-npm run start   # run built output
+npm run build       # production build
+npm run start       # run built output
+npm run typecheck   # type-check src + eval
+npm run eval        # run the eval harness as a CI / regression gate
 ```
 
----
+The eval harness lives in `eval/` and powers `miii doctor`. As `npm run eval` it doubles as a regression gate — it exits non-zero if any model fails any scenario, so a prompt or tool change that regresses a baseline model is caught in CI. Same engine, two doors: `miii doctor` for users checking their setup, `npm run eval` for maintainers gating changes.
+
+### Testing the `miii` command against your local changes
+
+The global `miii` command points at whatever was last installed with `npm install -g miii-agent` — **not** your working tree. After editing source, the global binary is stale, so `miii` (and `miii doctor`) will run the old code and may appear to ignore your changes (e.g. printing the wrong model). Two ways to run your local build:
+
+```bash
+node dist/cli.js doctor <model>   # run the freshly built output directly
+# — or —
+npm run build && npm link         # point the global `miii` at this repo
+```
+
+`npm link` symlinks the global `miii` to `dist/cli.js` in this repo, so each `npm run build` is picked up automatically. Restore the published version later with `npm install -g miii-agent`. Note: `npm run dev` / `npm run start` always run the current source and never have this staleness problem.
 
 ## Project Status
 

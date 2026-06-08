@@ -3,4 +3,15 @@ import { render } from 'ink'
 import { createElement } from 'react'
 import { App } from './ui/App.js'
 
-render(createElement(App))
+const [, , cmd, ...rest] = process.argv
+
+if (cmd === 'doctor' || cmd === 'eval') {
+  // `miii doctor [models] [scenarioFilter]` — checks whether your installed
+  // models can actually drive the agent. Bundled into the shipped binary by
+  // tsup, so it works for global installs. `eval` is a hidden alias kept for
+  // CI / `npm run eval`. Lazy-imported so normal TUI startup stays lean.
+  const { runEval } = await import('../eval/run.js')
+  process.exit(await runEval(rest))
+} else {
+  render(createElement(App))
+}
