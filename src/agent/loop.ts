@@ -1,5 +1,6 @@
 import { chat } from '../ollama/client.js'
 import { TOOLS, getTool, toOllamaTools } from '../tools/registry.js'
+import { validateInput } from '../tools/validate.js'
 import { buildSystemPrompt } from '../prompt/system.js'
 import { check, type PermissionContext } from '../permissions/policy.js'
 import { HookBus } from '../hooks/bus.js'
@@ -171,6 +172,19 @@ export async function* runAgent(opts: RunAgentOpts): AsyncGenerator<AgentEvent, 
         continue
       }
 
+      const invalid = validateInput(tool.input_schema, use.input)
+      if (invalid) {
+        const r: ToolResultBlock = {
+          type: 'tool_result',
+          tool_use_id: use.id,
+          content: `${invalid} for ${use.name}.`,
+          is_error: true,
+        }
+        results.push(r)
+        yield { type: 'tool-result', block: r }
+        continue
+      }
+
       const decision = await check(use.name, use.input, permissions)
       if (decision === 'deny') {
         const r: ToolResultBlock = {
@@ -185,7 +199,9 @@ export async function* runAgent(opts: RunAgentOpts): AsyncGenerator<AgentEvent, 
         continue
       }
 
-      await hooks?.firePre(use)
+      // Hooks are best-effort: a throwing hook must never break the
+      // tool_use → tool_result block invariant the model relies on.
+      try { await hooks?.firePre(use) } catch { /* hook error ignored */ }
       let r: ToolResultBlock
       try {
         const out = await tool.handler(use.input)
@@ -203,7 +219,7 @@ export async function* runAgent(opts: RunAgentOpts): AsyncGenerator<AgentEvent, 
           is_error: true,
         }
       }
-      await hooks?.firePost(use, r)
+      try { await hooks?.firePost(use, r) } catch { /* hook error ignored */ }
       results.push(r)
       yield { type: 'tool-result', block: r }
     }

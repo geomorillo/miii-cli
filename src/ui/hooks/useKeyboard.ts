@@ -161,7 +161,7 @@ export function useKeyboard(opts: KeyboardOptions) {
     // --- permission prompt overlay ---
     if (state === 'ready' && pendingPermissionRef.current) {
       if (key.upArrow) { setPermissionCursor((i) => Math.max(0, i - 1)); return }
-      if (key.downArrow) { setPermissionCursor((i) => Math.min(1, i + 1)); return }
+      if (key.downArrow) { setPermissionCursor((i) => Math.min(2, i + 1)); return }
       if (key.return) { resolvePermission(permissionCursor); return }
       return
     }

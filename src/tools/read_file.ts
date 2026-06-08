@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs'
+import { confinePath } from './paths.js'
 import type { Tool } from './types.js'
 
 interface Input {
@@ -18,7 +19,7 @@ export const read_file: Tool<Input> = {
   handler: ({ path }) => {
     try {
       const MAX = 200_000
-      const raw = readFileSync(path, 'utf-8')
+      const raw = readFileSync(confinePath(path), 'utf-8')
       const truncated = raw.length > MAX
       const body = truncated ? raw.slice(0, MAX) + `\n[truncated: ${raw.length - MAX} more chars]` : raw
       return { content: body }

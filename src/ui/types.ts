@@ -19,8 +19,10 @@ export interface ChatMessage {
   duration?: number
 }
 
+export type PermissionAnswer = 'yes' | 'no' | 'always'
+
 export interface PermissionRequest {
   toolName: string
   input: unknown
-  resolve: (answer: 'yes' | 'no') => void
+  resolve: (answer: PermissionAnswer) => void
 }

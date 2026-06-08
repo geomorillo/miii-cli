@@ -6,7 +6,7 @@
  */
 import { useState, useRef } from 'react'
 import { runAgent } from '../../agent/loop.js'
-import type { ChatMessage, PermissionRequest, ToolUseDisplay, ToolResultDisplay } from '../types.js'
+import type { ChatMessage, PermissionRequest, PermissionAnswer, ToolUseDisplay, ToolResultDisplay } from '../types.js'
 import type { MiiMessage } from '../../agent/types.js'
 
 // How often (ms) we flush streaming text to React state — avoids a re-render per token.
@@ -31,8 +31,8 @@ export function useAgentRunner(model: string | undefined, activeCtx: number | nu
   const abortRef = useRef<AbortController | null>(null)
   const pendingPermissionRef = useRef<PermissionRequest | null>(null)
 
-  /** Prompt the UI for a yes/no permission decision and await the user's choice. */
-  function askPermission(toolName: string, input: unknown): Promise<'yes' | 'no'> {
+  /** Prompt the UI for a permission decision and await the user's choice. */
+  function askPermission(toolName: string, input: unknown): Promise<PermissionAnswer> {
     return new Promise((resolve) => {
       const req: PermissionRequest = { toolName, input, resolve }
       pendingPermissionRef.current = req
@@ -45,7 +45,7 @@ export function useAgentRunner(model: string | undefined, activeCtx: number | nu
   function resolvePermission(cursor: number) {
     const req = pendingPermissionRef.current
     if (!req) return
-    const answers: Array<'yes' | 'no'> = ['yes', 'no']
+    const answers: PermissionAnswer[] = ['yes', 'always', 'no']
     pendingPermissionRef.current = null
     setPendingPermission(null)
     req.resolve(answers[cursor])

@@ -269,6 +269,7 @@ function PermissionPrompt({ req, cursor }: { req: PermissionRequest; cursor: num
   const label = TOOL_LABEL[req.toolName] ?? req.toolName
   const options = [
     { label: 'Yes', key: 'yes' },
+    { label: "Yes, don't ask again for this", key: 'always' },
     { label: 'No', key: 'no' },
   ]
   const summary = summarizeInput(req.input)

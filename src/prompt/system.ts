@@ -73,6 +73,7 @@ ${toolLines}
 - Treat a green test run or a successful command as the completion signal. If it fails, fix and re-run.
 
 # Permissions
-- When a new bash command pattern, file path, or glob pattern is needed, ask the user once; on approval it persists as a Tool(pattern) rule (e.g. Bash(npm test *), WriteFile(src/*)).
+- File tools are confined to the working directory; paths outside it are denied.
+- Each tool call may prompt the user for approval. If they choose "don't ask again", the exact command or path is persisted to ~/.miii/permissions.json and the same call is auto-allowed thereafter.
 `
 }

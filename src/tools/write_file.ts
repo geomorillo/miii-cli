@@ -1,5 +1,6 @@
 import { writeFileSync, mkdirSync } from 'fs'
 import { dirname } from 'path'
+import { confinePath } from './paths.js'
 import type { Tool } from './types.js'
 
 interface Input {
@@ -20,8 +21,9 @@ export const write_file: Tool<Input> = {
   },
   handler: ({ path, content }) => {
     try {
-      mkdirSync(dirname(path), { recursive: true })
-      writeFileSync(path, content, 'utf-8')
+      const abs = confinePath(path)
+      mkdirSync(dirname(abs), { recursive: true })
+      writeFileSync(abs, content, 'utf-8')
       return { content: `Wrote ${path} (${content.length} bytes)` }
     } catch (err) {
       return { content: err instanceof Error ? err.message : String(err), is_error: true }

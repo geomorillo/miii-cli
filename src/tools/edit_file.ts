@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs'
+import { confinePath } from './paths.js'
 import type { Tool } from './types.js'
 
 interface Input {
@@ -20,16 +21,21 @@ export const edit_file: Tool<Input> = {
     required: ['path', 'old_str', 'new_str'],
   },
   handler: ({ path, old_str, new_str }) => {
-    const src = readFileSync(path, 'utf-8')
-    const first = src.indexOf(old_str)
-    if (first === -1) {
-      return { content: `old_str not found in ${path}`, is_error: true }
+    try {
+      const abs = confinePath(path)
+      const src = readFileSync(abs, 'utf-8')
+      const first = src.indexOf(old_str)
+      if (first === -1) {
+        return { content: `old_str not found in ${path}`, is_error: true }
+      }
+      if (src.indexOf(old_str, first + 1) !== -1) {
+        return { content: `old_str not unique in ${path}`, is_error: true }
+      }
+      writeFileSync(abs, src.slice(0, first) + new_str + src.slice(first + old_str.length), 'utf-8')
+      return { content: `Edited ${path}` }
+    } catch (err) {
+      return { content: err instanceof Error ? err.message : String(err), is_error: true }
     }
-    if (src.indexOf(old_str, first + 1) !== -1) {
-      return { content: `old_str not unique in ${path}`, is_error: true }
-    }
-    writeFileSync(path, src.slice(0, first) + new_str + src.slice(first + old_str.length), 'utf-8')
-    return { content: `Edited ${path}` }
   },
 }
 

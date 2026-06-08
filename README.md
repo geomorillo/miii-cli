@@ -1,5 +1,7 @@
 # miii
 
+> small · simple · smart · strategic · semantic
+>
 > Your code never leaves your machine. No API keys. No cloud. No bullshit.
 
 **miii** is a local-first AI coding agent that lives in your terminal. Powered by [Ollama](https://ollama.com), it reads your code, writes features, runs tests, and fixes bugs — entirely on your hardware, at native speed.
@@ -7,6 +9,18 @@
 [![npm](https://img.shields.io/npm/v/miii-agent)](https://www.npmjs.com/package/miii-agent)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
+
+---
+
+## The name
+
+**miii** stands for five principles it's built around:
+
+- **small** — tight codebase, no bloat. You can read the whole thing.
+- **simple** — no API keys, no accounts, no config ceremony. Just run it.
+- **smart** — decomposes problems and verifies its own work like an engineer.
+- **strategic** — plans before it acts; tools are gated, paths are confined.
+- **semantic** — works from the meaning of your code, not blind text matching.
 
 ---
 
@@ -115,7 +129,7 @@ miii ships with a built-in tool suite the agent can invoke autonomously:
 | `grep` | Regex search across files |
 | `run_bash` | Execute shell commands |
 
-Every sensitive operation is gated by a permission system — you approve what the agent can touch.
+Every sensitive operation is gated by a permission system — you approve what the agent can touch, and "always" approvals persist to `~/.miii/permissions.json` so you're never asked twice. File tools are confined to your working directory; `../` traversal and absolute paths outside it are rejected.
 
 ---
 
@@ -137,8 +151,9 @@ graph TD
 
     subgraph Agent ["Agent Layer"]
         AgentLoop -->|"chat request"| Adapter["Ollama Adapter\n(agent/adapter.ts)"]
-        AgentLoop -->|"tool call"| ToolRegistry["Tool Registry\n(tools/registry.ts)"]
-        AgentLoop -->|"permission check"| Policy["Permission Policy\n(permissions/policy.ts)"]
+        AgentLoop -->|"1. validate input"| Validate["Input Validator\n(tools/validate.ts)"]
+        AgentLoop -->|"2. permission check"| Policy["Permission Policy\n(permissions/policy.ts)"]
+        AgentLoop -->|"3. tool call"| ToolRegistry["Tool Registry\n(tools/registry.ts)"]
         AgentLoop -->|"events"| EventBus["Event Bus\n(hooks/bus.ts)"]
     end
 
@@ -149,6 +164,9 @@ graph TD
         ToolRegistry --> Glob["glob"]
         ToolRegistry --> Grep["grep"]
         ToolRegistry --> RunBash["run_bash"]
+        ReadFile -.-> Confine["Path Confinement\n(tools/paths.ts)"]
+        WriteFile -.-> Confine
+        EditFile -.-> Confine
     end
 
     Adapter -->|"HTTP streaming"| Ollama["Ollama\n(local LLM server)"]
@@ -159,9 +177,11 @@ graph TD
 
     subgraph Storage ["Local Storage"]
         Config["~/.miii/config.json\n(model, host, effort)"]
+        Rules["~/.miii/permissions.json\n(saved allow rules)"]
     end
 
     App -.->|"reads"| Config
+    Policy -.->|"reads / persists 'always'"| Rules
 ```
 
 ---
