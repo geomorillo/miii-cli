@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.7...miii-agent-v0.1.8) (2026-06-08)
+
+
+### Features
+
+* **security:** input validation, path confinement, persistent permissions ([f800a6c](https://github.com/maruakshay/miii-cli/commit/f800a6c15234fa12238879a49da1d8d573edd197))
+
 ## [0.1.7](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.6...miii-agent-v0.1.7) (2026-06-07)
 
 
