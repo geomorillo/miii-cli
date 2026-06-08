@@ -15,6 +15,8 @@
   },
   "scripts": {
     "start": "tsx src/cli.tsx",
+    "eval": "tsx src/cli.tsx eval",
+    "typecheck": "tsc --noEmit",
     "dev": "tsx watch src/cli.tsx",
     "build": "tsup",
     "postbuild": "node -e \"if(process.platform!=='win32')require('fs').chmodSync('dist/cli.js',0o755)\"",

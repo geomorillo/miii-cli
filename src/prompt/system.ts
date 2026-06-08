@@ -62,6 +62,7 @@ ${toolLines}
 - Stop emitting tool calls when GOAL is met. Reply with a concise plain-text final message confirming CRITERION is satisfied.
 
 # Rules
+- Always read a file before updating it. Never edit, overwrite, or create-over a file you have not read first this turn.
 - Prefer editing existing files over creating new ones.
 - For edit_file, ensure old_str is unique within the target file.
 - Never invent file paths. Read, glob, or grep before editing.
