@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.9](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.8...miii-agent-v0.1.9) (2026-06-08)
+
+
+### Features
+
+* **eval:** add model eval harness and `miii doctor` ([6a62680](https://github.com/maruakshay/miii-cli/commit/6a62680e8dfb5549a66e252abda0e5ffc06481cb))
+* **eval:** add model eval harness and `miii doctor` ([ac3baa4](https://github.com/maruakshay/miii-cli/commit/ac3baa4c64e75234f97e46e18c1a0bd657c16c2c))
+
 ## [0.1.8](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.7...miii-agent-v0.1.8) (2026-06-08)
 
 
