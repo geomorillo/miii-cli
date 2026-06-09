@@ -30,7 +30,7 @@ export const run_bash: Tool<Input> = {
       const out = [stdout, stderr].filter(Boolean).join('\n')
       const is_error = exitCode !== 0
       const body = out || (is_error ? `(no output)` : '')
-      const content = is_error ? `${body}\n[exit ${exitCode}]` : body
+      const content = `${body}\n[exit ${exitCode}]`
       return {
         content: content.slice(0, 32000),
         is_error,

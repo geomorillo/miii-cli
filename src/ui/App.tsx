@@ -111,7 +111,7 @@ export function App() {
 
       {updateAvailable && (
         <Box marginLeft={2} marginBottom={1}>
-          <Text color="yellow">{`↑ update available: v${updateAvailable} — run: npm i -g miii-agent`}</Text>
+          <Text color="yellow">{`↑ update available: v${updateAvailable} — run: miii --update`}</Text>
         </Box>
       )}
 
