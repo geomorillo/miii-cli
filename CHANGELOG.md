@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.10](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.9...miii-agent-v0.1.10) (2026-06-09)
+
+
+### Features
+
+* **cli:** self-update command, auto-allow read-only tools, always em… ([1d89911](https://github.com/maruakshay/miii-cli/commit/1d89911d5b28d4c257e62c522c821855c1345abe))
+* **cli:** self-update command, auto-allow read-only tools, always emit exit code ([a3fd8c1](https://github.com/maruakshay/miii-cli/commit/a3fd8c154d6254fe47f79bda1d2f0e7b8716922e))
+
 ## [0.1.9](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.8...miii-agent-v0.1.9) (2026-06-08)
 
 
