@@ -5,7 +5,13 @@ import { App } from './ui/App.js'
 
 const [, , cmd, ...rest] = process.argv
 
-if (cmd === 'doctor' || cmd === 'eval') {
+if (cmd === 'update' || cmd === '--update' || cmd === '-u') {
+  // `miii --update` — self-update to the latest published version via npm.
+  const { spawnSync } = await import('child_process')
+  console.log('Updating miii-agent…')
+  const r = spawnSync('npm', ['i', '-g', 'miii-agent@latest'], { stdio: 'inherit', shell: process.platform === 'win32' })
+  process.exit(r.status ?? 1)
+} else if (cmd === 'doctor' || cmd === 'eval') {
   // `miii doctor [models] [scenarioFilter]` — checks whether your installed
   // models can actually drive the agent. Bundled into the shipped binary by
   // tsup, so it works for global installs. `eval` is a hidden alias kept for

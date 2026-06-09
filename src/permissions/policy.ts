@@ -84,11 +84,16 @@ function matches(rule: Rule, toolName: string, subject: string): boolean {
   }
 }
 
+/** Read-only tools are always allowed — never prompt for these. */
+const ALWAYS_ALLOW = new Set(['read_file', 'grep', 'glob'])
+
 export async function check(
   toolName: string,
   input: unknown,
   ctx: PermissionContext,
 ): Promise<Decision> {
+  if (ALWAYS_ALLOW.has(toolName)) return 'allow'
+
   const subject = subjectFor(toolName, input)
   const rules = loadRules()
   if (rules.some((r) => matches(r, toolName, subject))) return 'allow'
