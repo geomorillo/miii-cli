@@ -1,5 +1,20 @@
 import { execa } from 'execa'
+import { statSync } from 'fs'
 import type { Tool } from './types.js'
+
+// Sort newest-first; "what did I just touch" is the common intent.
+// Files that vanish between listing and stat sink to the bottom.
+function byMtimeDesc(paths: string[]): string[] {
+  const mtime = new Map<string, number>()
+  for (const p of paths) {
+    try {
+      mtime.set(p, statSync(p).mtimeMs)
+    } catch {
+      mtime.set(p, 0)
+    }
+  }
+  return [...paths].sort((a, b) => (mtime.get(b) ?? 0) - (mtime.get(a) ?? 0))
+}
 
 interface Input {
   pattern: string
@@ -7,8 +22,16 @@ interface Input {
   max_results?: number
 }
 
-function globToFindName(glob: string): string {
-  return glob
+// Build `find` args approximating a glob, for machines without ripgrep.
+// No slash after stripping a leading globstar -> match basename with -name.
+// Slash remains (e.g. a "src" prefix) -> match full path with -path, globstar -> single star.
+function globToFindArgs(root: string, glob: string): string[] {
+  const stripped = glob.replace(/^\*\*\//, '')
+  if (!stripped.includes('/')) {
+    return [root, '-type', 'f', '-name', stripped]
+  }
+  const pathPat = '*/' + glob.replace(/\*\*/g, '*')
+  return [root, '-type', 'f', '-path', pathPat]
 }
 
 export const glob: Tool<Input> = {
@@ -33,13 +56,11 @@ export const glob: Tool<Input> = {
         timeout: 20000,
       })
 
-    const tryFind = () => {
-      const name = globToFindName(pattern.replace(/^\*\*\//, ''))
-      return execa('find', [root, '-type', 'f', '-name', name], {
+    const tryFind = () =>
+      execa('find', globToFindArgs(root, pattern), {
         reject: false,
         timeout: 20000,
       })
-    }
 
     try {
       let res
@@ -51,8 +72,9 @@ export const glob: Tool<Input> = {
       } catch {
         res = await tryFind()
       }
-      const lines = (res.stdout ?? '').split('\n').filter(Boolean).slice(0, limit)
-      if (lines.length === 0) return { content: 'No files matched.' }
+      const all = (res.stdout ?? '').split('\n').filter(Boolean)
+      if (all.length === 0) return { content: 'No files matched.' }
+      const lines = byMtimeDesc(all).slice(0, limit)
       return { content: lines.join('\n') }
     } catch (err) {
       return { content: err instanceof Error ? err.message : String(err), is_error: true }

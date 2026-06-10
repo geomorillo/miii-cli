@@ -1,4 +1,16 @@
-import { resolve, relative, isAbsolute, sep } from 'path'
+import { resolve, relative, isAbsolute, sep, join } from 'path'
+import { homedir } from 'os'
+
+/** App-owned spill directory (see spill.ts). Trusted so the model can page large
+ *  tool output written here, even though it sits outside cwd. confinePath also
+ *  backs write_file/edit_file, so this grants writes here too — acceptable: the
+ *  dir is app-owned and auto-cleaned on startup. */
+const SPILL_DIR = resolve(join(homedir(), '.miii', 'output'))
+
+function isUnder(parent: string, child: string): boolean {
+  const rel = relative(parent, child)
+  return rel === '' || (!rel.startsWith('..' + sep) && rel !== '..' && !isAbsolute(rel))
+}
 
 /**
  * Resolve a tool-supplied path against the current working directory and reject
@@ -14,9 +26,10 @@ export function confinePath(p: string): string {
   }
   const root = process.cwd()
   const abs = resolve(root, p)
-  const rel = relative(root, abs)
-  if (rel === '..' || rel.startsWith('..' + sep) || isAbsolute(rel)) {
-    throw new Error(`Path "${p}" is outside the working directory (${root}). Access denied.`)
+  // Allow reads/writes inside cwd, plus the app-owned spill dir (large tool
+  // output the model needs to page back in).
+  if (isUnder(root, abs) || isUnder(SPILL_DIR, abs)) {
+    return abs
   }
-  return abs
+  throw new Error(`Path "${p}" is outside the working directory (${root}). Access denied.`)
 }

@@ -2,6 +2,10 @@
 import { render } from 'ink'
 import { createElement } from 'react'
 import { App } from './ui/App.js'
+import { cleanupSpill } from './tools/spill.js'
+
+// Drop yesterday's spilled tool output before starting. Best-effort.
+cleanupSpill()
 
 const [, , cmd, ...rest] = process.argv
 
