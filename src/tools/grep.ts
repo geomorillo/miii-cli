@@ -18,7 +18,7 @@ export const grep: Tool<Input> = {
       pattern:          { type: 'string', description: 'Regex pattern' },
       path:             { type: 'string', description: 'Root path to search (default cwd)' },
       glob:             { type: 'string', description: 'File glob filter, e.g. "*.ts"' },
-      case_insensitive: { type: 'string', description: 'Set "true" for case-insensitive' },
+      case_insensitive: { type: 'boolean', description: 'Case-insensitive match' },
       max_results:      { type: 'number', description: 'Max matching lines (default 200)' },
     },
     required: ['pattern'],

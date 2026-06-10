@@ -1,4 +1,5 @@
 import { execa } from 'execa'
+import { spillIfLarge } from './spill.js'
 import type { Tool } from './types.js'
 
 interface Input {
@@ -30,9 +31,9 @@ export const run_bash: Tool<Input> = {
       const out = [stdout, stderr].filter(Boolean).join('\n')
       const is_error = exitCode !== 0
       const body = out || (is_error ? `(no output)` : '')
-      const content = `${body}\n[exit ${exitCode}]`
+      const content = `${spillIfLarge(body, 'command output')}\n[exit ${exitCode}]`
       return {
-        content: content.slice(0, 32000),
+        content,
         is_error,
       }
     } catch (err) {
