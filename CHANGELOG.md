@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.11](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.10...miii-agent-v0.1.11) (2026-06-10)
+
+
+### Features
+
+* **tools:** lossless output spill, ranged reads, smarter edit/glob ([8e6ef83](https://github.com/maruakshay/miii-cli/commit/8e6ef831da6490a702dc2c2ac8837b3c7ac42eda))
+* **tools:** lossless output spill, ranged reads, smarter edit/glob ([69d19b5](https://github.com/maruakshay/miii-cli/commit/69d19b58bb987f4553226229fd964b330cde57c8))
+
 ## [0.1.10](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.9...miii-agent-v0.1.10) (2026-06-09)
 
 
