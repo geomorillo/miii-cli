@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.13](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.12...miii-agent-v0.1.13) (2026-06-11)
+
+
+### Features
+
+* **ui:** full-width diff bg with right margin; polish README ([995a549](https://github.com/maruakshay/miii-cli/commit/995a549085a948bb8c89878ab6ec63d35499f030))
+* **ui:** full-width diff bg with right margin; polish README ([b2d51b7](https://github.com/maruakshay/miii-cli/commit/b2d51b7df92de0e9bf9846726f159af372f4a716))
+
 ## [0.1.12](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.11...miii-agent-v0.1.12) (2026-06-11)
 
 
