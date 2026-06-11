@@ -88,11 +88,14 @@ function FileEditBlock({
         </Text>
       </Box>
       {shown.map((ln, i) => {
-        const width = (process.stdout.columns ?? 80) - 6
-        const content = `${ln.sign} ${ln.text}`.padEnd(width)
+        // left indent is 6 (marginLeft 2 + 4); pad to leave a 20-col right margin
+        const width = (process.stdout.columns ?? 80) - 6 - 20
+        const raw = `${ln.sign} ${ln.text}`
+        const content = raw.length > width ? raw.slice(0, width) : raw.padEnd(width)
         return (
           <Box key={i} marginLeft={4}>
             <Text
+              wrap="truncate"
               backgroundColor={ln.sign === '+' ? '#13351f' : ln.sign === '-' ? '#3b1414' : undefined}
               dimColor={ln.sign === ' '}
             >

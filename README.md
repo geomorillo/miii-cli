@@ -1,26 +1,38 @@
-# miii
+<h1 align="center">miii</h1>
 
-> small · simple · smart · strategic · semantic
->
-> Your code never leaves your machine. No API keys. No cloud. No bullshit.
+<p align="center">
+  <strong>Small. Simple. Smart. Strategic. Semantic.</strong>
+</p>
 
-**miii** is a local-first AI coding agent that lives in your terminal. Powered by [Ollama](https://ollama.com), it reads your code, writes features, runs tests, and fixes bugs — entirely on your hardware, at native speed.
+<p align="center">
+  A local-first AI coding agent that lives in your terminal.<br>
+  Your code never leaves your machine. No API keys. No cloud. No bullshit.
+</p>
 
-[![npm](https://img.shields.io/npm/v/miii-agent)](https://www.npmjs.com/package/miii-agent)
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
+<p align="center">
+  <a href="https://www.npmjs.com/package/miii-agent"><img src="https://img.shields.io/npm/v/miii-agent" alt="npm version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen" alt="node version"></a>
+  <a href="https://ollama.com"><img src="https://img.shields.io/badge/powered%20by-Ollama-black" alt="powered by Ollama"></a>
+</p>
+
+miii is a local-first AI coding agent that lives in your terminal. Powered by [Ollama](https://ollama.com), it reads your code, writes features, runs tests, and fixes bugs — entirely on your hardware, at native speed.
 
 ---
 
-## The name
+## Contents
 
-**miii** stands for five principles it's built around:
-
-- **small** — tight codebase, no bloat. You can read the whole thing.
-- **simple** — no API keys, no accounts, no config ceremony. Just run it.
-- **smart** — decomposes problems and verifies its own work like an engineer.
-- **strategic** — plans before it acts; tools are gated, paths are confined.
-- **semantic** — works from the meaning of your code, not blind text matching.
+- [Demo](#demo)
+- [The Local-First Advantage](#the-local-first-advantage)
+- [Core Philosophy](#core-philosophy)
+- [Quick Start](#quick-start)
+- [Interaction Guide](#interaction-guide)
+- [Technical Deep Dive](#technical-deep-dive)
+- [Configuration](#configuration)
+- [System Architecture](#system-architecture)
+- [Development](#development)
+- [Project Status](#project-status)
+- [License](#license)
 
 ---
 
@@ -30,25 +42,45 @@
 
 ---
 
-## Why miii?
+## The Local-First Advantage
 
-Most AI coding tools are wrappers around cloud APIs. They're slow, expensive, and send your private code to someone else's server.
+Most AI coding tools are wrappers around cloud APIs. They are slow, expensive, and require you to trust your private codebase to a third-party server.
 
-miii is different:
+miii flips the script:
 
-- **Local-first** — Powered by Ollama. Your code stays on your disk, period.
-- **Zero ceremony** — No API keys. No billing. No accounts. Just `miii`.
-- **Actually agentic** — miii doesn't just chat. It decomposes problems, calls tools, and verifies results like an engineer would.
-- **Fast** — No network round-trips. Response time is limited by your GPU, not a CDN.
+- **Absolute Privacy** — Powered by Ollama. Your code stays on your disk, period.
+- **Zero Friction** — No API keys, no billing, no accounts. Just `miii`.
+- **True Agency** — miii doesn't just chat; it decomposes problems, invokes tools, and verifies results like a senior engineer.
+- **Native Performance** — No network round-trips. Latency is limited by your GPU, not a CDN.
+
+|                | Cloud AI agents          | **miii**                     |
+|----------------|--------------------------|------------------------------|
+| Your code      | Sent to a third party    | Never leaves your machine    |
+| Cost           | Per-token billing        | Free — runs on your hardware |
+| Setup          | API keys, accounts       | `npm i -g miii-agent`        |
+| Offline        | No                       | Yes                          |
+| Latency        | Network + queue          | Your GPU only                |
 
 ---
 
-## Installation
+## Core Philosophy
+
+miii is built on five foundational principles:
+
+- **small** — A tight, bloat-free codebase. You can read the entire project in an afternoon.
+- **simple** — No configuration ceremony. Install and run.
+- **smart** — Decomposes complex tasks and verifies its own work.
+- **strategic** — Plans before acting; tools are gated and paths are confined.
+- **semantic** — Operates on the meaning of your code, not blind text matching.
+
+---
+
+## Quick Start
 
 ### Prerequisites
 
 - **Node.js** ≥ 18
-- **Ollama** running locally — [install here](https://ollama.com/download)
+- **Ollama** running locally — [Download here](https://ollama.com/download)
 - A coding model pulled locally:
 
 ```bash
@@ -57,25 +89,18 @@ ollama pull qwen2.5-coder:14b
 ollama pull deepseek-coder-v2
 ```
 
-### Install miii
+### Installation & Launch
 
 ```bash
 npm install -g miii-agent
-```
-
-### Launch
-
-```bash
 miii
 ```
 
-That's it.
-
 ---
 
-## Usage
+## Interaction Guide
 
-Once inside the TUI, just type naturally:
+Inside the TUI, interact naturally:
 
 ```
 > refactor the auth module to use async/await
@@ -94,6 +119,63 @@ Once inside the TUI, just type naturally:
 | `Esc` | Stop current generation or tool run |
 | `Ctrl+O` | Toggle full tool output view |
 | `Ctrl+C` | Quit |
+
+---
+
+## Technical Deep Dive
+
+### Capabilities
+
+miii ships with a built-in tool suite that the agent invokes autonomously:
+
+| Tool | Function |
+|------|----------|
+| `read_file` | Read any file in your workspace |
+| `write_file` | Create new files |
+| `edit_file` | Precise string-level edits with whitespace tolerance (no rewrites) |
+| `glob` | Pattern-match files across the project |
+| `grep` | Regex search across files |
+| `run_bash` | Execute shell commands |
+
+**Security & Safety:** Every sensitive operation is gated by a permission system. You approve what the agent can touch, and "always" approvals persist to `~/.miii/permissions.json`. File tools are strictly confined to your working directory; `../` traversal and absolute paths outside the workspace are rejected.
+
+### Lossless Output Spill
+
+Big tool outputs (like 50K-line test logs) usually get truncated, leaving the model to guess. miii doesn't truncate; it **spills**.
+
+When a tool result exceeds the inline budget (~10K bytes), the full output is written to `~/.miii/output/<id>.txt`. Only a head + tail **preview** is inlined, followed by a pointer:
+
+```
+[command output truncated: 5184 lines / 412900 bytes.
+ Full output at ~/.miii/output/9f3a1c.txt — read it with
+ read_file offset/limit to see the elided middle.]
+```
+
+If the model needs the elided middle, it pages through it using `read_file` ranged reads. Nothing is ever lost. Spill files are garbage-collected after 24 hours.
+
+### The Model Doctor
+
+Not every local model can drive an agent. A model that cannot emit clean tool calls will simply chat at you instead of editing files. `miii doctor` validates your installed models against concrete engineering tasks.
+
+```bash
+miii doctor                     # check every local model (from `ollama list`)
+miii doctor qwen2.5-coder:7b    # check one model
+miii doctor gemma4:e4b grep     # check one model against "grep" scenarios
+```
+
+It verifies outcomes (did the file actually change?) and prints a verdict:
+
+```
+=== qwen3-coder ===
+PASS  edit-exact-string   ...
+PASS  read-then-answer    ...
+PASS  create-new-file     ...
+PASS  grep-locate         ...
+  → qwen3-coder: 4/4 — ready
+
+=== gemma4:e4b ===
+  → gemma4:e4b: 1/4 — not recommended — weak tool-calling
+```
 
 ---
 
@@ -117,70 +199,7 @@ Settings live in `~/.miii/config.json` and are created on first run.
 
 ---
 
-## Capabilities
-
-miii ships with a built-in tool suite the agent can invoke autonomously:
-
-| Tool | What it does |
-|------|-------------|
-| `read_file` | Read any file in your workspace |
-| `write_file` | Create new files |
-| `edit_file` | Precise string-level edits with whitespace tolerance (no rewrites) |
-| `glob` | Pattern-match files across the project |
-| `grep` | Regex search across files |
-| `run_bash` | Execute shell commands |
-
-Every sensitive operation is gated by a permission system — you approve what the agent can touch, and "always" approvals persist to `~/.miii/permissions.json` so you're never asked twice. File tools are confined to your working directory; `../` traversal and absolute paths outside it are rejected.
-
----
-
-## Lossless output spill
-
-Big tool outputs used to get truncated — a 50K-line test log chopped to 32K, the middle gone, the model guessing at what it missed. miii doesn't truncate. It **spills**.
-
-When a tool result exceeds the inline budget (~10K bytes), the full output is written to `~/.miii/output/<id>.txt`. Only a head + tail **preview** is inlined into the conversation, followed by a pointer:
-
-```
-[command output truncated: 5184 lines / 412900 bytes.
- Full output at ~/.miii/output/9f3a1c.txt — read it with
- read_file offset/limit to see the elided middle.]
-```
-
-The head shows where output started; the tail catches the errors and summaries that live at the bottom. If the model needs the elided middle, it pages through it with `read_file` ranged reads — nothing is ever lost. The inline budget becomes "how much to show," not "how much exists."
-
-Spill files are confined to the app-owned `~/.miii/output` dir and garbage-collected after 24h. If the spill write fails (e.g. read-only home), miii falls back to a lossy head+tail and says so explicitly, so the context window is never blown.
-
----
-
-## Checking your setup
-
-miii is model-agnostic — but not every local model can actually drive an agent. A model that can't emit clean tool calls will chat at you instead of editing files. `miii doctor` tells you which of *your* installed models are up to the job, before you waste time wondering why nothing happens.
-
-```bash
-miii doctor                     # check every local model (from `ollama list`)
-miii doctor qwen2.5-coder:7b    # check one model
-miii doctor gemma4:e4b grep     # one model, only scenarios matching "grep"
-```
-
-It runs the real agent against a handful of concrete tasks (edit a file, read-and-answer, create a file, locate a definition) and checks the *outcome* — did the file actually change, was the answer right — then prints a verdict per model:
-
-```
-=== qwen3-coder ===
-PASS  edit-exact-string   ...
-PASS  read-then-answer    ...
-PASS  create-new-file     ...
-PASS  grep-locate         ...
-  → qwen3-coder: 4/4 — ready
-
-=== gemma4:e4b ===
-  → gemma4:e4b: 1/4 — not recommended — weak tool-calling
-```
-
-With more than one model it also prints a compatibility matrix (`+` pass, `.` fail). Cloud models are skipped by default; name one explicitly to include it. If a model comes back `marginal` or `not recommended`, pull a stronger coding model and try again.
-
----
-
-## Architecture
+## System Architecture
 
 ```mermaid
 graph TD
@@ -242,12 +261,16 @@ graph TD
 
 ## Development
 
+### Setup
+
 ```bash
 git clone https://github.com/maruakshay/miii-cli.git
 cd miii-cli
 npm install
 npm run dev
 ```
+
+### Build & Test
 
 ```bash
 npm run build       # production build
@@ -256,11 +279,11 @@ npm run typecheck   # type-check src + eval
 npm run eval        # run the eval harness as a CI / regression gate
 ```
 
-The eval harness lives in `eval/` and powers `miii doctor`. As `npm run eval` it doubles as a regression gate — it exits non-zero if any model fails any scenario, so a prompt or tool change that regresses a baseline model is caught in CI. Same engine, two doors: `miii doctor` for users checking their setup, `npm run eval` for maintainers gating changes.
+The eval harness in `eval/` powers `miii doctor` and serves as a regression gate. If `npm run eval` exits non-zero, a prompt or tool change has regressed a baseline model.
 
-### Testing the `miii` command against your local changes
+### Testing Local Changes
 
-The global `miii` command points at whatever was last installed with `npm install -g miii-agent` — **not** your working tree. After editing source, the global binary is stale, so `miii` (and `miii doctor`) will run the old code and may appear to ignore your changes (e.g. printing the wrong model). Two ways to run your local build:
+The global `miii` command points to the last installed version of `miii-agent`. To run your local working tree:
 
 ```bash
 node dist/cli.js doctor <model>   # run the freshly built output directly
@@ -268,11 +291,13 @@ node dist/cli.js doctor <model>   # run the freshly built output directly
 npm run build && npm link         # point the global `miii` at this repo
 ```
 
-`npm link` symlinks the global `miii` to `dist/cli.js` in this repo, so each `npm run build` is picked up automatically. Restore the published version later with `npm install -g miii-agent`. Note: `npm run dev` / `npm run start` always run the current source and never have this staleness problem.
+`npm link` symlinks the global `miii` to `dist/cli.js` in this repo. Restore the published version later with `npm install -g miii-agent`.
+
+---
 
 ## Project Status
 
-MVP. Core agent loop works. Actively refining tool execution, streaming, and the permission model. PRs welcome — fork it, break it, improve it.
+**MVP.** Core agent loop is stable. Actively refining tool execution, streaming, and the permission model. PRs are welcome — fork it, break it, improve it.
 
 ---
 
