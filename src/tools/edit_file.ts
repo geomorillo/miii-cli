@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs'
 import { confinePath } from './paths.js'
+import { verifyHint } from './verifyHint.js'
 import type { Tool } from './types.js'
 
 interface Input {
@@ -19,6 +20,46 @@ function similarity(a: string, b: string): number {
   let same = 0
   for (let i = 0; i < Math.min(x.length, y.length); i++) if (x[i] === y[i]) same++
   return same / len
+}
+
+/**
+ * Exact match failed. Try matching old_str against src ignoring per-line
+ * leading/trailing whitespace — the most common reason a model's old_str misses.
+ * Returns the [start, end] char range in src of a unique whitespace-tolerant
+ * match, or null if there is no match or more than one.
+ */
+function fuzzyRange(src: string, old_str: string): [number, number] | null {
+  const srcLines = src.split('\n')
+  const oldLines = old_str.split('\n')
+  const norm = (l: string) => l.trim()
+  const oldNorm = oldLines.map(norm)
+
+  // Char offset of the start of each src line.
+  const offsets: number[] = new Array(srcLines.length)
+  let acc = 0
+  for (let i = 0; i < srcLines.length; i++) {
+    offsets[i] = acc
+    acc += srcLines[i].length + 1 // +1 for the '\n'
+  }
+
+  const matches: Array<[number, number]> = []
+  const window = oldLines.length
+  for (let i = 0; i + window <= srcLines.length; i++) {
+    let ok = true
+    for (let j = 0; j < window; j++) {
+      if (norm(srcLines[i + j]) !== oldNorm[j]) {
+        ok = false
+        break
+      }
+    }
+    if (!ok) continue
+    const start = offsets[i]
+    const last = i + window - 1
+    const end = offsets[last] + srcLines[last].length
+    matches.push([start, end])
+  }
+
+  return matches.length === 1 ? matches[0] : null
 }
 
 /**
@@ -72,6 +113,16 @@ export const edit_file: Tool<Input> = {
       const src = readFileSync(abs, 'utf-8')
       const first = src.indexOf(old_str)
       if (first === -1) {
+        // Exact match failed — try a unique whitespace-tolerant match before giving up.
+        if (replace_all !== true) {
+          const fuzzy = fuzzyRange(src, old_str)
+          if (fuzzy) {
+            const [s, e] = fuzzy
+            const out = src.slice(0, s) + new_str + src.slice(e)
+            writeFileSync(abs, out, 'utf-8')
+            return { content: `Edited ${path} (whitespace-tolerant match).${verifyHint(path)}` }
+          }
+        }
         return { content: `old_str not found in ${path}.${nearMiss(src, old_str)}`, is_error: true }
       }
       const all = replace_all === true
@@ -84,7 +135,7 @@ export const edit_file: Tool<Input> = {
       const out = all ? src.split(old_str).join(new_str) : src.slice(0, first) + new_str + src.slice(first + old_str.length)
       const n = all ? src.split(old_str).length - 1 : 1
       writeFileSync(abs, out, 'utf-8')
-      return { content: `Edited ${path}${all ? ` (${n} occurrences)` : ''}` }
+      return { content: `Edited ${path}${all ? ` (${n} occurrences)` : ''}.${verifyHint(path)}` }
     } catch (err) {
       return { content: err instanceof Error ? err.message : String(err), is_error: true }
     }

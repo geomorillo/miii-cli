@@ -92,6 +92,7 @@ Once inside the TUI, just type naturally:
 | `/models` | Switch active Ollama model |
 | `/clear` | Reset conversation history |
 | `Esc` | Stop current generation or tool run |
+| `Ctrl+O` | Toggle full tool output view |
 | `Ctrl+C` | Quit |
 
 ---
@@ -124,12 +125,30 @@ miii ships with a built-in tool suite the agent can invoke autonomously:
 |------|-------------|
 | `read_file` | Read any file in your workspace |
 | `write_file` | Create new files |
-| `edit_file` | Precise string-level edits (no rewrites) |
+| `edit_file` | Precise string-level edits with whitespace tolerance (no rewrites) |
 | `glob` | Pattern-match files across the project |
 | `grep` | Regex search across files |
 | `run_bash` | Execute shell commands |
 
 Every sensitive operation is gated by a permission system — you approve what the agent can touch, and "always" approvals persist to `~/.miii/permissions.json` so you're never asked twice. File tools are confined to your working directory; `../` traversal and absolute paths outside it are rejected.
+
+---
+
+## Lossless output spill
+
+Big tool outputs used to get truncated — a 50K-line test log chopped to 32K, the middle gone, the model guessing at what it missed. miii doesn't truncate. It **spills**.
+
+When a tool result exceeds the inline budget (~10K bytes), the full output is written to `~/.miii/output/<id>.txt`. Only a head + tail **preview** is inlined into the conversation, followed by a pointer:
+
+```
+[command output truncated: 5184 lines / 412900 bytes.
+ Full output at ~/.miii/output/9f3a1c.txt — read it with
+ read_file offset/limit to see the elided middle.]
+```
+
+The head shows where output started; the tail catches the errors and summaries that live at the bottom. If the model needs the elided middle, it pages through it with `read_file` ranged reads — nothing is ever lost. The inline budget becomes "how much to show," not "how much exists."
+
+Spill files are confined to the app-owned `~/.miii/output` dir and garbage-collected after 24h. If the spill write fails (e.g. read-only home), miii falls back to a lossy head+tail and says so explicitly, so the context window is never blown.
 
 ---
 
@@ -195,6 +214,10 @@ graph TD
         ReadFile -.-> Confine["Path Confinement\n(tools/paths.ts)"]
         WriteFile -.-> Confine
         EditFile -.-> Confine
+        RunBash -->|"large output"| SpillMod["Output Spill\n(tools/spill.ts)"]
+        Grep -->|"large output"| SpillMod
+        Glob -->|"large output"| SpillMod
+        SpillMod -.->|"head+tail preview\n+ read pointer"| ToolRegistry
     end
 
     Adapter -->|"HTTP streaming"| Ollama["Ollama\n(local LLM server)"]
@@ -206,10 +229,13 @@ graph TD
     subgraph Storage ["Local Storage"]
         Config["~/.miii/config.json\n(model, host, effort)"]
         Rules["~/.miii/permissions.json\n(saved allow rules)"]
+        Spill["~/.miii/output/\n(spilled tool output)"]
     end
 
     App -.->|"reads"| Config
     Policy -.->|"reads / persists 'always'"| Rules
+    SpillMod -.->|"writes full output"| Spill
+    ReadFile -.->|"pages elided middle\n(offset/limit)"| Spill
 ```
 
 ---

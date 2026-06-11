@@ -1,6 +1,7 @@
 import { writeFileSync, mkdirSync } from 'fs'
 import { dirname } from 'path'
 import { confinePath } from './paths.js'
+import { verifyHint } from './verifyHint.js'
 import type { Tool } from './types.js'
 
 interface Input {
@@ -24,7 +25,7 @@ export const write_file: Tool<Input> = {
       const abs = confinePath(path)
       mkdirSync(dirname(abs), { recursive: true })
       writeFileSync(abs, content, 'utf-8')
-      return { content: `Wrote ${path} (${content.length} bytes)` }
+      return { content: `Wrote ${path} (${content.length} bytes).${verifyHint(path)}` }
     } catch (err) {
       return { content: err instanceof Error ? err.message : String(err), is_error: true }
     }
