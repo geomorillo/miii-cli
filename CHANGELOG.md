@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.12](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.11...miii-agent-v0.1.12) (2026-06-11)
+
+
+### Features
+
+* **ui/tools:** ctrl+o expand, diff bg highlight, fuzzy edit, verify nudge ([b3a32e3](https://github.com/maruakshay/miii-cli/commit/b3a32e3f037e31ab264d0b8bbc72129fa42f7e3f))
+* **ui/tools:** ctrl+o expand, diff bg highlight, fuzzy edit, verify nudge ([7e57ac2](https://github.com/maruakshay/miii-cli/commit/7e57ac2fb162a0cea6c54bb34340691aae7f7560))
+
 ## [0.1.11](https://github.com/maruakshay/miii-cli/compare/miii-agent-v0.1.10...miii-agent-v0.1.11) (2026-06-10)
 
 
