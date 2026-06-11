@@ -1,7 +1,29 @@
+import { useState, useEffect } from 'react'
 import { Box, Text } from 'ink'
 import { ThinkingBlock } from './ThinkingBlock.js'
 import type { ChatMessage, ToolUseDisplay, ToolResultDisplay, PermissionRequest } from './types.js'
 import { EMPTY_STATE_HINTS, EMPTY_STATE_TITLE, } from './constants.js'
+
+// Tool output is collapsed to a few lines by default; ctrl+o toggles full view.
+const COLLAPSED_LINES = 3
+
+let globalToolExpanded = false
+const toolExpandListeners = new Set<() => void>()
+
+export function toggleToolExpanded() {
+  globalToolExpanded = !globalToolExpanded
+  toolExpandListeners.forEach((fn) => fn())
+}
+
+function useToolExpanded() {
+  const [expanded, setExpanded] = useState(globalToolExpanded)
+  useEffect(() => {
+    const handler = () => setExpanded(globalToolExpanded)
+    toolExpandListeners.add(handler)
+    return () => { toolExpandListeners.delete(handler) }
+  }, [])
+  return expanded
+}
 
 interface Props {
   messages: ChatMessage[]
@@ -47,8 +69,8 @@ function FileEditBlock({
   removed: number
   previewLines: Array<{ sign: '+' | '-' | ' '; text: string }>
 }) {
-  const MAX = 16
-  const shown = previewLines.slice(0, MAX)
+  const expanded = useToolExpanded()
+  const shown = expanded ? previewLines : previewLines.slice(0, COLLAPSED_LINES)
   const extra = previewLines.length - shown.length
   return (
     <Box flexDirection="column" marginLeft={2}>
@@ -65,16 +87,23 @@ function FileEditBlock({
           {removed > 0 ? `Added ${added} lines, removed ${removed} lines` : `Added ${added} lines`}
         </Text>
       </Box>
-      {shown.map((ln, i) => (
-        <Box key={i} marginLeft={4}>
-          <Text color={ln.sign === '+' ? 'green' : ln.sign === '-' ? 'red' : undefined} dimColor={ln.sign === ' '}>
-            {ln.sign} {ln.text}
-          </Text>
-        </Box>
-      ))}
+      {shown.map((ln, i) => {
+        const width = (process.stdout.columns ?? 80) - 6
+        const content = `${ln.sign} ${ln.text}`.padEnd(width)
+        return (
+          <Box key={i} marginLeft={4}>
+            <Text
+              backgroundColor={ln.sign === '+' ? '#13351f' : ln.sign === '-' ? '#3b1414' : undefined}
+              dimColor={ln.sign === ' '}
+            >
+              {content}
+            </Text>
+          </Box>
+        )
+      })}
       {extra > 0 && (
         <Box marginLeft={4}>
-          <Text dimColor>… {extra} more lines</Text>
+          <Text dimColor>… {extra} more lines · ctrl+o to expand</Text>
         </Box>
       )}
     </Box>
@@ -147,6 +176,7 @@ function summarizeResult(res: ToolResultDisplay, toolName?: string): string {
 }
 
 function ToolResultBlock({ result, toolName }: { result: ToolResultDisplay; toolName: string }) {
+  const expanded = useToolExpanded()
   const content = result.content ?? ''
   const lines = content.split('\n')
   const showMulti =
@@ -161,9 +191,9 @@ function ToolResultBlock({ result, toolName }: { result: ToolResultDisplay; tool
       </Box>
     )
   }
-  const MAX_LINES = 10
   const MAX_LINE_WIDTH = 200
-  const shown = lines.slice(0, MAX_LINES).map((l) => truncate(l, MAX_LINE_WIDTH))
+  const visible = expanded ? lines : lines.slice(0, COLLAPSED_LINES)
+  const shown = visible.map((l) => truncate(l, MAX_LINE_WIDTH))
   const extra = lines.length - shown.length
   return (
     <Box flexDirection="column" marginLeft={2}>
@@ -177,7 +207,7 @@ function ToolResultBlock({ result, toolName }: { result: ToolResultDisplay; tool
       ))}
       {extra > 0 && (
         <Box marginLeft={4}>
-          <Text dimColor>… {extra} more lines</Text>
+          <Text dimColor>… {extra} more lines · ctrl+o to expand</Text>
         </Box>
       )}
     </Box>

@@ -9,6 +9,7 @@ import { setModel, setEffort, type Effort } from '../../config.js'
 import { filteredCommands } from '../CommandPalette.js'
 import { parseMention, searchFiles } from '../FilePicker.js'
 import { toggleThinkingVisible } from '../ThinkingBlock.js'
+import { toggleToolExpanded } from '../ChatView.js'
 import {
   summarizeMessage,
   persistSession,
@@ -91,6 +92,8 @@ export function useKeyboard(opts: KeyboardOptions) {
     if (key.ctrl && char === 'c') { exit(); return }
     // Ctrl+T toggles thinking block content visibility
     if (key.ctrl && char === 't') { toggleThinkingVisible(); return }
+    // Ctrl+O toggles full tool output (collapsed to a few lines by default)
+    if (key.ctrl && char === 'o') { toggleToolExpanded(); return }
 
     if (key.escape && busyRef.current && abortRef.current) {
       abortRef.current.abort()
