@@ -1,4 +1,4 @@
-import { chat } from '../ollama/client.js'
+import { chat } from '../llm/client.js'
 import { TOOLS, getTool, toOllamaTools } from '../tools/registry.js'
 import { validateInput } from '../tools/validate.js'
 import { buildSystemPrompt } from '../prompt/system.js'
