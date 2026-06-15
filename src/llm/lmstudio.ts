@@ -30,7 +30,10 @@ export function isAvailable(): boolean {
 
 export async function listModels(): Promise<string[]> {
   try {
-    const res = await fetch(`${host()}/v1/models`, { headers: headers() })
+    const res = await fetch(`${host()}/v1/models`, {
+      headers: headers(),
+      signal: AbortSignal.timeout(5000),
+    })
     if (!res.ok) {
       let detail = ''
       try { detail = await res.text() } catch {}
@@ -120,8 +123,6 @@ export async function* chat(
   if (lmTools) body.tools = lmTools
   if (opts?.num_predict && opts.num_predict > 0) body.max_tokens = opts.num_predict
 
-  let done = false
-  let text = ''
   const toolCallAccum: Map<number, {
     id?: string
     type?: string
@@ -129,12 +130,18 @@ export async function* chat(
     args: string
   }> = new Map()
 
+  const TIMEOUT_MS = 180000
+  const timeoutSignal = AbortSignal.timeout(TIMEOUT_MS)
+  const combinedSignal = opts?.signal && typeof AbortSignal.any === 'function'
+    ? AbortSignal.any([opts.signal, timeoutSignal])
+    : (opts?.signal ?? timeoutSignal)
+
   try {
     const res = await fetch(`${host()}/v1/chat/completions`, {
       method: 'POST',
       headers: headers(),
       body: JSON.stringify(body),
-      signal: opts?.signal,
+      signal: combinedSignal,
     })
 
     if (!res.ok) {
@@ -152,59 +159,61 @@ export async function* chat(
     const decoder = new TextDecoder()
     let buffer = ''
 
-    while (true) {
-      const { done: readerDone, value } = await reader.read()
-      if (readerDone) break
-      if (opts?.signal?.aborted) break
+    try {
+      readLoop: while (true) {
+        const { done: readerDone, value } = await reader.read()
+        if (readerDone || opts?.signal?.aborted) break
 
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() ?? ''
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
 
-      for (const line of lines) {
-        const parsed = parseSSELine(line) as Record<string, unknown> | null
-        if (!parsed) continue
+        for (const line of lines) {
+          const parsed = parseSSELine(line) as Record<string, unknown> | null
+          if (!parsed) continue
 
-        const choices = parsed.choices as Array<{
-          delta: Record<string, unknown>
-          finish_reason?: string | null
-        }> | undefined
-        if (!choices || choices.length === 0) continue
+          const choices = parsed.choices as Array<{
+            delta: Record<string, unknown>
+            finish_reason?: string | null
+          }> | undefined
+          if (!choices || choices.length === 0) continue
 
-        const delta = choices[0].delta ?? {}
-        const finishReason = choices[0].finish_reason
+          const delta = choices[0].delta ?? {}
+          const finishReason = choices[0].finish_reason
 
-        if (delta.content) {
-          text += delta.content
-          yield { content: delta.content as string, done: false }
-        }
+          if (delta.content) {
+            yield { content: delta.content as string, done: false }
+          }
 
-        const deltaToolCalls = delta.tool_calls as Array<{
-          index: number
-          id?: string
-          type?: string
-          function?: { name?: string; arguments?: string }
-        }> | undefined
-        if (deltaToolCalls) {
-          for (const tc of deltaToolCalls) {
-            const idx = tc.index
-            if (!toolCallAccum.has(idx)) {
-              toolCallAccum.set(idx, { args: '' })
-            }
-            const acc = toolCallAccum.get(idx)!
-            if (tc.id) acc.id = tc.id
-            if (tc.type) acc.type = tc.type
-            if (tc.function) {
-              if (tc.function.name) acc.name = tc.function.name
-              if (tc.function.arguments) acc.args += tc.function.arguments
+          const deltaToolCalls = delta.tool_calls as Array<{
+            index: number
+            id?: string
+            type?: string
+            function?: { name?: string; arguments?: string }
+          }> | undefined
+          if (deltaToolCalls) {
+            for (const tc of deltaToolCalls) {
+              const idx = tc.index
+              if (!toolCallAccum.has(idx)) {
+                toolCallAccum.set(idx, { args: '' })
+              }
+              const acc = toolCallAccum.get(idx)!
+              if (tc.id) acc.id = tc.id
+              if (tc.type) acc.type = tc.type
+              if (tc.function) {
+                if (tc.function.name) acc.name = tc.function.name
+                if (tc.function.arguments) acc.args += tc.function.arguments
+              }
             }
           }
-        }
 
-        if (finishReason) {
-          done = true
+          if (finishReason) {
+            break readLoop
+          }
         }
       }
+    } finally {
+      reader.cancel().catch(() => {})
     }
   } catch (err) {
     if (opts?.signal?.aborted) {
@@ -213,6 +222,9 @@ export async function* chat(
     }
     if (isConnectionError(err)) {
       throw new Error(NOT_AVAILABLE)
+    }
+    if (timeoutSignal.aborted && !opts?.signal?.aborted) {
+      throw new Error(`LM Studio request timed out after ${TIMEOUT_MS / 1000}s. The model may still be loading or thinking.`)
     }
     throw err
   }
