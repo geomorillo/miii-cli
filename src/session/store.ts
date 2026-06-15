@@ -21,7 +21,7 @@ import type { ChatMessage } from '../ui/types.js'
 
 /** Encode the cwd into a single dir-safe segment, Claude Code-style. */
 function encodeProjectDir(cwd: string): string {
-  return cwd.replace(/[/\\]/g, '-').replace(/^-+/, '')
+  return cwd.replace(/[:/\\]+/g, '-').replace(/^-+/, '')
 }
 
 const SESSION_DIR = join(homedir(), '.miii', 'projects', encodeProjectDir(process.cwd()), 'session')
